@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+
+Name: CFoundationDB
+Description: The foundationdb C library
+Version: 5.0.5
+Cflags: -I${includedir}/foundationdb
+Libs: -L${libdir} -lfdb_c
