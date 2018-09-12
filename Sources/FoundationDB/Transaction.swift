@@ -151,9 +151,9 @@ public protocol Transaction {
 	returned future when the transaction is ready to use again. If the error
 	is not retryable, the returned future will rethrow the error.
 	
-	- parameter error:    The error that the system encountered.
-	- returns:        A future indicating when the transaction is
-	ready again.
+	- parameter error:	The error that the system encountered.
+	- returns:			A future indicating when the transaction is
+						ready again.
 	*/
 	func attemptRetry(error: Error) -> EventLoopFuture<Void>
 	
@@ -205,8 +205,8 @@ extension Transaction {
 	/**
 	This method reads a value from the database.
 	
-	- parameter key:    The key to read.
-	- returns:        The value for that key.
+	- parameter key:	The key to read.
+	- returns:			The value for that key.
 	*/
 	public func read(_ key: DatabaseValue) -> EventLoopFuture<DatabaseValue?> {
 		return read(key, snapshot: false)
@@ -227,17 +227,17 @@ extension Transaction {
 	any key has changed in this range since the start of this transaction
 	this transaction will not be accepted.
 	
-	- parameter start:    The selector for the beginning of the range.
-	- parameter end:    The selector for the end of the range.
-	- parameter limit:    The maximum number of values to return.
-	- parameter mode:    A mode specifying how we should chunk the return
-	values from each iteration of the read.
-	- parameter snapshot:  Whether we should treat this as a snapshot read.
-	- parameter reverse:  Whether we should reverse the order of the rows.
-	- returns:        A list of tuples with the keys and their
-	corresponding values.
+	- parameter start:		The selector for the beginning of the range.
+	- parameter end:		The selector for the end of the range.
+	- parameter limit:		The maximum number of values to return.
+	- parameter mode:		A mode specifying how we should chunk the return
+							values from each iteration of the read.
+	- parameter snapshot:	Whether we should treat this as a snapshot read.
+	- parameter reverse:	Whether we should reverse the order of the rows.
+	- returns:				A list of tuples with the keys and their
+							corresponding values.
 	*/
-	public func read(from start: KeySelector, to end: KeySelector, limit: Int? = nil, mode: StreamingMode = .iterator, snapshot: Bool = false, reverse: Bool = false) ->  EventLoopFuture<ResultSet> {
+	public func read(from start: KeySelector, to end: KeySelector, limit: Int? = nil, mode: StreamingMode = .iterator, snapshot: Bool = false, reverse: Bool = false) -> EventLoopFuture<ResultSet> {
 		return self.readSelectors(from: start, to: end, limit: limit, mode: mode, snapshot: snapshot, reverse: reverse)
 	}
 	
@@ -250,11 +250,11 @@ extension Transaction {
 	any key has changed in this range since the start of this transaction
 	this transaction will not be accepted.
 	
-	- parameter range:    The range of keys to read.
-	- returns:        A list of tuples with the keys and their
-	corresponding values.
+	- parameter range:	The range of keys to read.
+	- returns:			A list of tuples with the keys and their
+						corresponding values.
 	*/
-	public func read(range: Range<DatabaseValue>) ->  EventLoopFuture<ResultSet> {
+	public func read(range: Range<DatabaseValue>) -> EventLoopFuture<ResultSet> {
 		return self.readSelectors(from: KeySelector(greaterThan: range.lowerBound, orEqual: true), to: KeySelector(greaterThan: range.upperBound, orEqual: true), limit: nil, mode: .iterator, snapshot: false, reverse: false)
 	}
 	

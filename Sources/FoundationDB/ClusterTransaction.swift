@@ -104,9 +104,9 @@ public class ClusterTransaction: Transaction {
 	This method finds a key using a key selector.
 	
 	- parameter selector:		The selector telling us where to find the
-	key.
+								key.
 	- parameter snapshot:		Whether we should perform a snapshot read
-	when finding the key.
+								when finding the key.
 	- returns:					The first key matching this selector.
 	*/
 	public func findKey(selector: KeySelector, snapshot: Bool) -> EventLoopFuture<DatabaseValue?> {
@@ -155,7 +155,7 @@ public class ClusterTransaction: Transaction {
 	- parameter mode:		The streaming mode to use.
 	- parameter snapshot:	Whether we should perform a snapshot read.
 	- parameter reverse:	Whether we should return the rows in reverse
-	order.
+							order.
 	- returns:				A list of keys and their corresponding values.
 	*/
 	public func readSelectors(from start: KeySelector, to end: KeySelector, limit: Int?, mode: StreamingMode, snapshot: Bool, reverse: Bool) ->	EventLoopFuture<ResultSet> {
@@ -351,9 +351,9 @@ public class ClusterTransaction: Transaction {
 	returned future when the transaction is ready to use again. If the error
 	is not retryable, the returned future will rethrow the error.
 	
-	- parameter error:    The error that the system encountered.
-	- returns:        A future indicating when the transaction is
-	ready again.
+	- parameter error:	The error that the system encountered.
+	- returns:			A future indicating when the transaction is
+						ready again.
 	*/
 	public func attemptRetry(error: Error) -> EventLoopFuture<()> {
 		if let apiError = error as? ClusterDatabaseConnection.FdbApiError {

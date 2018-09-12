@@ -166,8 +166,8 @@ public final class StackMachine {
 	/**
 	This method fetches commands from the database and runs them.
 	
-	- parameter connection:    The connection that the system should fetch
-	the connection from.
+	- parameter connection:		The connection that the system should fetch
+								the connection from.
 	*/
 	public func run() {
 		let commandPrefix = currentTransactionName
@@ -190,7 +190,7 @@ public final class StackMachine {
 	/**
 	This method runs a stack machine.
 	
-	- parameter arguments:    The command-line arguments.
+	- parameter arguments:	The command-line arguments.
 	*/
 	public static func run(eventLoop: EventLoop, arguments: [String], projectDirectory: String = ".") {
 		var arguments = arguments
@@ -254,7 +254,7 @@ public final class StackMachine {
 	/**
 	This method pushes a future onto the stack.
 	
-	- parameter future:    The future to push.
+	- parameter future:		The future to push.
 	*/
 	func push<T>(future: EventLoopFuture<T>) {
 		self.stack.append(Item(value: future.map { $0 as Any }, metadata: self.currentMetadata))

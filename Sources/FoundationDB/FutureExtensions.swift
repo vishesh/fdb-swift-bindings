@@ -22,7 +22,7 @@ import CFoundationDB
 import Foundation
 import NIO
 
-extension EventLoopFuture {  
+extension EventLoopFuture {
 	internal static func retrying(eventLoop: EventLoop, onError errorFilter: @escaping (Error) -> EventLoopFuture<Void>, retryBlock: @escaping () throws -> EventLoopFuture<T>) -> EventLoopFuture<T> {
 		return eventLoop.submit {
 			try retryBlock()

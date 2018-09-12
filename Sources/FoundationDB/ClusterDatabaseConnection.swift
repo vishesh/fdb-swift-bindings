@@ -75,10 +75,9 @@ public class ClusterDatabaseConnection: DatabaseConnection {
 	/**
 	This method opens a connection to a database cluster.
 	
-	- parameter clusterPath:    The path to the cluster file.
-	- throws:            If we're not able to connect to the
-	database, this will throw a
-	FutureError.
+	- parameter clusterPath:	The path to the cluster file.
+	- throws:					If we're not able to connect to the
+								database, this will throw a FutureError.
 	*/
 	public init(fromClusterFile clusterPath: String? = nil, eventLoop: EventLoop) throws {
 		let error = fdb_setup_network()
@@ -127,9 +126,9 @@ public class ClusterDatabaseConnection: DatabaseConnection {
 	
 	- parameter transaction:		The transaction to commit.
 	- returns:						A future that will fire when the
-	transaction has finished committing. If
-	the transaction is rejected, the future
-	will throw an error.
+									transaction has finished committing. If
+									the transaction is rejected, the future
+									will throw an error.
 	*/
 	public func commit(transaction: Transaction) -> EventLoopFuture<()> {
 		guard let clusterTransaction = transaction as? ClusterTransaction else { return self.eventLoop.newFailedFuture(error: FdbApiError(1000)) }

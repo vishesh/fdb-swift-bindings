@@ -25,8 +25,8 @@ extension Transaction {
 	/**
 	This method reads a key as a tuple.
 	
-	- parameter tuple:    The key to read.
-	- returns:        The value for that key.
+	- parameter tuple:	The key to read.
+	- returns:			The value for that key.
 	*/
 	public func read(_ key: Tuple, snapshot: Bool = false) -> EventLoopFuture<Tuple?> {
 		return self.read(key.databaseValue as DatabaseValue, snapshot: snapshot).map { $0.map { Tuple(databaseValue: $0) } }
@@ -68,11 +68,11 @@ extension Transaction {
 	any key has changed in this range since the start of this transaction
 	this transaction will not be accepted.
 	
-	- parameter range:    The range of keys to read.
-	- returns:        A list of tuples with the keys and their
-	corresponding values.
+	- parameter range:	The range of keys to read.
+	- returns:			A list of tuples with the keys and their
+						corresponding values.
 	*/
-	public func read(range: Range<Tuple>) ->  EventLoopFuture<TupleResultSet> {
+	public func read(range: Range<Tuple>) -> EventLoopFuture<TupleResultSet> {
 		return read(range: range.lowerBound.databaseValue ..< range.upperBound.databaseValue).map { TupleResultSet($0) }
 	}
 	
@@ -85,9 +85,9 @@ extension Transaction {
 	any key has changed in this range since the start of this transaction
 	this transaction will not be accepted.
 	
-	- parameter range:    The range of keys to read.
-	- returns:        A list of tuples with the keys and their
-	corresponding values.
+	- parameter range:	The range of keys to read.
+	- returns:			A list of tuples with the keys and their
+						corresponding values.
 	*/
 	public func read(range: ClosedRange<Tuple>) -> EventLoopFuture<TupleResultSet> {
 		return read(range: openRangeEnd(range))

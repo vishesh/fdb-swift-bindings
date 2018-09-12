@@ -55,7 +55,7 @@ public protocol DatabaseConnection {
 	func commit(transaction: Transaction) -> EventLoopFuture<()>
 }
 
-extension DatabaseConnection {  
+extension DatabaseConnection {
 	/**
 	This method starts a transaction, runs a block of code, and commits the
 	transaction.
@@ -84,8 +84,8 @@ extension DatabaseConnection {
 	that future will also be provided by the future that this method
 	returns.
 	
-	- parameter block:  The block to run with the transaction.
-	- returns:      A future providing the result of the block.
+	- parameter block:	The block to run with the transaction.
+	- returns:			A future providing the result of the block.
 	*/
 	public func transaction<T>(_ block: @escaping (Transaction) throws -> EventLoopFuture<T>) -> EventLoopFuture<T> {
 		let transaction = self.startTransaction()
