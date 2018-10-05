@@ -24,7 +24,7 @@ This currently builds with Swift 4.0.
 
 ## Mac Command Line
 
-To build on the Mac, you must manually install the [pkg-config](https://github.com/FoundationDB/fdb-swift-bindings/blob/master/Sources/CFoundationDB/include/CFoundationDB_mac.pc)
+To build on the Mac, you must manually install the [pkg-config](https://raw.githubusercontent.com/FoundationDB/fdb-swift-c-packaging/master/CFoundationDB_mac.pc)
 file in `/usr/local/lib/pkgconfig/CFoundationDB.pc`.
 
 Then you can run `swift build` to build the library, and `swift test` to run the
