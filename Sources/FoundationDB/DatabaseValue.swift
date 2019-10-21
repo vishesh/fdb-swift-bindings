@@ -97,11 +97,11 @@ public struct DatabaseValue: Equatable, Hashable, Comparable, ExpressibleByStrin
 	prefix.
 	*/
 	public func hasPrefix(_ prefix: DatabaseValue) -> Bool {
-		if prefix.data.count > self.data.count { return false }
-		for index in 0..<prefix.data.count {
-			if self.data[index] != prefix.data[index] { return false }
-		}
-		return true
+        if prefix.data.count > self.data.count { return false }
+        for index in 0..<prefix.data.count {
+            if data[data.index(data.startIndex, offsetBy: index)] != prefix.data[prefix.data.index(prefix.data.startIndex, offsetBy: index)] { return false }
+        }
+        return true
 	}
 	
 	/**

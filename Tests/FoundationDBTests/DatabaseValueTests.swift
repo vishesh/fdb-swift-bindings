@@ -34,6 +34,7 @@ class DatabaseValueTests: XCTestCase {
 			("testHasPrefixWithPrefixValueIsTrue", testHasPrefixWithPrefixValueIsTrue),
 			("testHasPrefixWithSiblingKeyIsFalse", testHasPrefixWithSiblingKeyIsFalse),
 			("testHasPrefixWithChildKeyIsFalse", testHasPrefixWithChildKeyIsFalse),
+            ("testHasPrefixWithSubrangePrefixValueIsTrue", testHasPrefixWithSubrangePrefixValueIsTrue),
 			("testIncrementIncrementsLastByte", testIncrementIncrementsLastByte),
 			("testIncrementCanCarryIntoEarlierBytes", testIncrementCanCarryIntoEarlierBytes),
 			("testIncrementWithMaxValueWrapsToZero", testIncrementWithMaxValueWrapsToZero),
@@ -96,6 +97,12 @@ class DatabaseValueTests: XCTestCase {
 		let key2 = DatabaseValue(bytes: [1,2,3,4,5])
 		XCTAssertFalse(key1.hasPrefix(key2))
 	}
+
+    func testHasPrefixWithSubrangePrefixValueIsTrue() {
+        let key1 = DatabaseValue(Data([0,1,2,3,4])[1...])
+        let key2 = DatabaseValue(bytes: [1,2,3,4,5])
+        XCTAssertTrue(key2.hasPrefix(key1))
+    }
 	
 	func testIncrementIncrementsLastByte() {
 		var key = DatabaseValue(bytes: [1,2,3,4])
