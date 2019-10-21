@@ -59,6 +59,7 @@ class TupleTests: XCTestCase {
 			("testHasPrefixWithPrefixTupleIsTrue", testHasPrefixWithPrefixTupleIsTrue),
 			("testHasPrefixWithSiblingKeyIsFalse", testHasPrefixWithSiblingKeyIsFalse),
 			("testHasPrefixWithChildKeyIsFalse", testHasPrefixWithChildKeyIsFalse),
+            ("testHasPrefixReadRangeAndEvaluateHasPrefixIsTrue", testHasPrefixReadRangeAndEvaluateHasPrefixIsTrue),
 			("testIncrementLastEntryWithIntegerEntryIncrementsValue", testIncrementLastEntryWithIntegerEntryIncrementsValue),
 			("testIncrementLastEntryWithIntegerWithCarryCarriesIncrement", testIncrementLastEntryWithIntegerWithCarryCarriesIncrement),
 			("testIncrementLastEntryWithIntegerOverflowResetsToZero", testIncrementLastEntryWithIntegerOverflowResetsToZero),
@@ -410,6 +411,16 @@ class TupleTests: XCTestCase {
 		let key2 = Tuple("Test", "Key", 2)
 		XCTAssertFalse(key1.hasPrefix(key2))
 	}
+
+    func testHasPrefixReadRangeAndEvaluateHasPrefixIsTrue() {
+        do {
+            let key1 = try Tuple("Prefix", "Test", "Key").read(range: 1..<3)
+            let key2 = Tuple("Test", "Keys")
+            XCTAssertFalse(key2.hasPrefix(key1))
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+    }
 	
 	func testIncrementLastEntryWithIntegerEntryIncrementsValue() {
 		var key = Tuple("Test", "Key", 5)
