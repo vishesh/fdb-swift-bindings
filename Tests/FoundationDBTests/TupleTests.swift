@@ -415,8 +415,8 @@ class TupleTests: XCTestCase {
     func testHasPrefixReadRangeAndEvaluateHasPrefixIsTrue() {
         do {
             let key1 = try Tuple("Prefix", "Test", "Key").read(range: 1..<3)
-            let key2 = Tuple("Test", "Keys")
-            XCTAssertFalse(key2.hasPrefix(key1))
+            let key2 = Tuple("Test", "Key")
+            XCTAssertTrue(key2.hasPrefix(key1))
         } catch let e {
             XCTFail(e.localizedDescription)
         }
