@@ -6,7 +6,7 @@
         "repositoryURL": "https://github.com/FoundationDB/fdb-swift-c-packaging",
         "state": {
           "branch": "master",
-          "revision": "70264741f8a9b6c8b30746611658f82e78aca8a2",
+          "revision": "46a7f29471ae73aa8f21fb1839703fc62420da23",
           "version": null
         }
       },
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio",
         "state": {
           "branch": null,
-          "revision": "cf08e673dc41dc63d34065234c8fc432e8d334c4",
-          "version": "1.9.2"
+          "revision": "8da5c5a4e6c5084c296b9f39dc54f00be146e0fa",
+          "version": "1.14.2"
         }
       },
       {

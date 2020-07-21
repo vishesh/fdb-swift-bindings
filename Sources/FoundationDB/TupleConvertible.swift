@@ -135,7 +135,7 @@ extension TupleAdapter where ValueType: FixedWidthInteger {
 		}
 		let blankByte: UInt8 = (int < 0 ? 0xFF : 0x00)
 		let sign = (int < 0 ? -1 : 1)
-		let firstRealByte = bytes.index { $0 != blankByte } ?? bytes.endIndex
+		let firstRealByte = bytes.firstIndex { $0 != blankByte } ?? bytes.endIndex
 		buffer.append(UInt8(20 + sign * (bytes.count - firstRealByte)))
 		#if os(OSX)
 		buffer.append(contentsOf: bytes[firstRealByte..<bytes.count])
@@ -313,7 +313,7 @@ extension Data: TupleConvertible {
 		}
 		
 		public static func read(from buffer: Data, at offset: Int) -> Data {
-			return Data(bytes: readBytes(from: buffer, offset: offset + 1))
+			return Data(readBytes(from: buffer, offset: offset + 1))
 		}
 	}
 }

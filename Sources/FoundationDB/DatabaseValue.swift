@@ -46,7 +46,7 @@ public struct DatabaseValue: Equatable, Hashable, Comparable, ExpressibleByStrin
 	}
 	
 	public init(bytes: [UInt8]) {
-		self.init(Data(bytes: bytes))
+		self.init(Data(bytes))
 	}
 	
 	
@@ -56,7 +56,7 @@ public struct DatabaseValue: Equatable, Hashable, Comparable, ExpressibleByStrin
 	- parameter string:		The string to put in the tuple.
 	*/
 	public init(string: String) {
-		self.init(Data(bytes: Array(string.utf8)))
+		self.init(Data(Array(string.utf8)))
 	}
 	
 	/**

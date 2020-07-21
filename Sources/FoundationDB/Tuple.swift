@@ -261,9 +261,9 @@ public struct Tuple: Equatable, Hashable, Comparable {
 	/**
 		This method gets the hash code for this tuple.
 		*/
-	public var hashValue: Int {
-		return data.hashValue
-	}
+    public func hash(into hasher: inout Hasher) {
+        data.hash(into: &hasher)
+    }
 	
 	/**
 		This method increments the last entry in the tuple.

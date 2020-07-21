@@ -1,4 +1,4 @@
-// swift-tools-version:4.0
+// swift-tools-version:5.2
 import PackageDescription
 
 let package = Package(
@@ -12,7 +12,7 @@ let package = Package(
     .package(url: "https://github.com/FoundationDB/fdb-swift-c-packaging", .branch("master"))
   ],
   targets: [
-    .target(name: "FoundationDB", dependencies: ["NIO", "CFoundationDB"]),
+    .target(name: "FoundationDB", dependencies: [.product(name: "NIO", package: "swift-nio"), "CFoundationDB"]),
     .target(name: "CFoundationDB"),
     .target(name: "FoundationDBBindingTest", dependencies: ["FoundationDB"]),
     .target(name: "FoundationDBBindingTestRunner", dependencies: ["FoundationDBBindingTest"]),
