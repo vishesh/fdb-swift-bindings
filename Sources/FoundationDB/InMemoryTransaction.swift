@@ -100,7 +100,7 @@ public final class InMemoryTransaction: Transaction {
 	- returns:					The first key matching this selector.
 	*/
 	public func findKey(selector: KeySelector, snapshot: Bool) -> EventLoopFuture<DatabaseValue?> {
-		let keys = self.database.keys(from: DatabaseValue(Data(bytes: [0x00])), to: DatabaseValue(Data(bytes: [0xFF])))
+		let keys = self.database.keys(from: DatabaseValue(Data([0x00])), to: DatabaseValue(Data([0xFF])))
 		let index = self.keyMatching(selector: selector, from: keys)
 		if index >= keys.startIndex && index < keys.endIndex {
 			return eventLoop.newSucceededFuture(result: keys[index])
@@ -120,7 +120,7 @@ public final class InMemoryTransaction: Transaction {
 	will return the end index of the list.
 	*/
 	private func keyMatching(selector: KeySelector, from keys: [DatabaseValue]) -> Int {
-		var index = keys.index { selector.orEqual == 0 ? $0 >= selector.anchor : $0 > selector.anchor } ?? keys.endIndex
+		var index = keys.firstIndex { selector.orEqual == 0 ? $0 >= selector.anchor : $0 > selector.anchor } ?? keys.endIndex
 		index += Int(selector.offset) - 1
 		index = min(max(index, keys.startIndex - 1), keys.endIndex)
 		return index
@@ -153,7 +153,7 @@ public final class InMemoryTransaction: Transaction {
 	*/
 	public func readSelectors(from start: KeySelector, to end: KeySelector, limit: Int?, mode: StreamingMode, snapshot: Bool, reverse: Bool) ->	EventLoopFuture<ResultSet> {
 		return eventLoop.submit {
-			let allKeys = self.database.keys(from: DatabaseValue(Data(bytes: [0x00])), to: DatabaseValue(Data(bytes: [0xFF])))
+			let allKeys = self.database.keys(from: DatabaseValue(Data([0x00])), to: DatabaseValue(Data([0xFF])))
 			
 			var startIndex = self.keyMatching(selector: start, from: allKeys)
 			startIndex = max(startIndex, allKeys.startIndex)
@@ -376,7 +376,7 @@ public final class InMemoryTransaction: Transaction {
 			bytes.insert(UInt8(versionCopy & 0xFF), at: 0)
 			versionCopy = versionCopy >> 8
 		}
-		promise.succeed(result: DatabaseValue(Data(bytes: bytes)))
+		promise.succeed(result: DatabaseValue(Data(bytes)))
 	}
 	
 	/**

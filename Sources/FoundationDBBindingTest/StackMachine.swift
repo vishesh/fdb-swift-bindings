@@ -868,7 +868,7 @@ public final class StackMachine {
 					UInt8((bits >> 16) & 0xFF),
 					UInt8((bits >> 8) & 0xFF),
 					UInt8(bits & 0xFF),
-				])
+				] as [UInt8])
 				self.push(value: data)
 			}
 		case .startThread:
