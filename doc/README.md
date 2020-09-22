@@ -1,6 +1,8 @@
 This package provides a layer for using FoundationDB as a data store for a
 Swift application.
 
+**NOTE**: This package is no longer maintained. You may want to explore [bindings from the Community](https://github.com/kirilltitov/FDBSwift). We maintain a more detailed list of community bindings in [awesome-foundationdb](https://github.com/FoundationDB/awesome-foundationdb).
+
 # Building
 
 ## General
