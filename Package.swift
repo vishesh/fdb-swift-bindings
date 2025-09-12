@@ -23,8 +23,11 @@ import PackageDescription
 
 let package = Package(
     name: "FoundationDB",
+    platforms: [
+        .macOS(.v14)
+    ],
     products: [
-        .library(name: "FoundationDB", targets: ["FoundationDB"]),
+        .library(name: "FoundationDB", targets: ["FoundationDB"])
     ],
     targets: [
         .systemLibrary(
@@ -33,7 +36,10 @@ let package = Package(
         .target(
             name: "FoundationDB",
             dependencies: ["CFoundationDB"],
-            path: "Sources/FoundationDB"
+            path: "Sources/FoundationDB",
+            linkerSettings: [
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "/usr/local/lib"])
+            ]
         ),
         .testTarget(
             name: "FoundationDBTests",

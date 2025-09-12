@@ -45,7 +45,7 @@ class FdbNetwork {
     /// Indicates whether the network has been set up.
     private var networkSetup = false
     /// The pthread handle for the network thread.
-    private var networkThread: pthread_t = .init()
+    private var networkThread: pthread_t? = nil
 
     /// Initializes the FoundationDB network with the specified API version.
     ///
@@ -80,7 +80,7 @@ class FdbNetwork {
     ///
     /// This method must be called before starting the network thread.
     ///
-    /// - Throws: `FdbError` if network setup fails or if already set up.
+    /// - Throws: `FdbError` if network setup fails or if already set up.X
     func setupNetwork() throws {
         guard !networkSetup else {
             throw FdbError(.networkError)
@@ -100,10 +100,10 @@ class FdbNetwork {
     /// The network must be set up before calling this method.
     func startNetwork() {
         guard networkSetup else {
-            fatalError("Network must be setup before starting network thread")
+            fatalError("Network must be setup before starting thread network")
         }
 
-        var thread = pthread_t()
+        var thread = pthread_t(bitPattern: 0)
         let result = pthread_create(&thread, nil, { _ in
             let error = fdb_run_network()
             if error != 0 {
@@ -127,7 +127,7 @@ class FdbNetwork {
         }
 
         if networkSetup {
-            pthread_join(networkThread, nil)
+            pthread_join(networkThread!, nil)
         }
         networkSetup = false
     }
