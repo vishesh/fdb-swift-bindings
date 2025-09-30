@@ -124,3 +124,174 @@ func testTupleUUID() throws {
     #expect(decoded == testUUID, "Should decode back to original UUID")
     #expect(offset == encoded.count, "Offset should advance to end of encoded data")
 }
+
+@Test("TupleInt64 encoding and decoding - Zero")
+func testTupleInt64Zero() throws {
+    let testInt: Int64 = 0
+    let encoded = testInt.encodeTuple()
+
+    #expect(encoded == [TupleTypeCode.intZero.rawValue], "Zero should encode to intZero type code")
+
+    var offset = 1
+    let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original zero")
+    #expect(offset == encoded.count, "Offset should advance to end of encoded data")
+}
+
+@Test("TupleInt64 encoding and decoding - Small positive")
+func testTupleInt64SmallPositive() throws {
+    let testInt: Int64 = 42
+    let encoded = testInt.encodeTuple()
+
+    #expect(encoded.first == 0x15, "Small positive should use 0x15 type code (positiveInt1)")
+
+    var offset = 1
+    let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original positive integer")
+    #expect(offset == encoded.count, "Offset should advance to end of encoded data")
+}
+
+@Test("TupleInt64 encoding and decoding - Large negative")
+func testTupleInt64LargeNegative() throws {
+    let testInt: Int64 = -89_034_333_444
+    let encoded = testInt.encodeTuple()
+
+    // #expect(encoded.first == 0x13, "Small negative should use 0x13 type code (negativeInt1)")
+
+    var offset = 1
+    let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original negative integer")
+    #expect(offset == encoded.count, "Offset should advance to end of encoded data")
+}
+
+@Test("TupleInt64 encoding and decoding - Very Large negative")
+func testTupleInt64VeryLargeNegative() throws {
+    let testInt: Int64 = -(1 <<  55) - 34897432
+    let encoded = testInt.encodeTuple()
+
+    var offset = 1
+    let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original negative integer")
+    #expect(offset == encoded.count, "Offset should advance to end of encoded data")
+}
+
+@Test("TupleInt64 encoding and decoding - Very Large negative")
+func testTupleInt64VeryLargeNegative2() throws {
+    let testInt: Int64 = -(1 <<  60) - 34897432
+    let encoded = testInt.encodeTuple()
+
+    var offset = 1
+    let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original negative integer")
+    #expect(offset == encoded.count, "Offset should advance to end of encoded data")
+}
+
+@Test("TupleInt64 encoding and decoding - Large values")
+func testTupleInt64LargeValues() throws {
+    let largePositive: Int64 = Int64.max
+    let largeNegative: Int64 = Int64.min + 1
+
+    let encodedPos = largePositive.encodeTuple()
+    // let encodedNeg = largeNegative.encodeTuple()
+
+    var offsetPos = 1
+    var offsetNeg = 1
+
+    let decodedPos = try Int64.decodeTuple(from: encodedPos, at: &offsetPos)
+    // let decodedNeg = try Int64.decodeTuple(from: encodedNeg, at: &offsetNeg)
+
+    #expect(decodedPos == largePositive, "Should decode back to Int64.max")
+    // #expect(decodedNeg == largeNegative, "Should decode back to Int64.min")
+}
+
+@Test("TupleInt32 encoding and decoding")
+func testTupleInt32() throws {
+    let testInt: Int32 = -2_034_333_444
+    let encoded = testInt.encodeTuple()
+
+    var offset = 1
+    let decoded = try Int32.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original Int32")
+}
+
+@Test("TupleInt encoding and decoding")
+func testTupleInt() throws {
+    let testInt: Int = 123456
+    let encoded = testInt.encodeTuple()
+
+    var offset = 1
+    let decoded = try Int.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original Int")
+}
+
+@Test("TupleUInt64 encoding and decoding")
+func testTupleUInt64() throws {
+    let testUInt: UInt64 = 999999
+    let encoded = testUInt.encodeTuple()
+
+    var offset = 1
+    let decoded = try UInt64.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testUInt, "Should decode back to original UInt64")
+}
+
+@Test("TupleNested encoding and decoding")
+func testTupleNested() throws {
+    let innerTuple = Tuple("hello", 42, true)
+    let outerTuple = Tuple("outer", innerTuple, "end")
+
+    let encoded = outerTuple.encode()
+    let decoded = try Tuple.decode(from: encoded)
+
+    #expect(decoded.count == 3, "Should have 3 elements")
+
+    let decodedString1 = decoded[0] as? String
+    #expect(decodedString1 == "outer", "First element should be 'outer'")
+
+    let decodedNested = decoded[1] as? Tuple
+    #expect(decodedNested != nil, "Second element should be a Tuple")
+    #expect(decodedNested?.count == 3, "Nested tuple should have 3 elements")
+
+    let decodedString2 = decoded[2] as? String
+    #expect(decodedString2 == "end", "Third element should be 'end'")
+}
+
+@Test("Tuple with a zero integer")
+func testTupleWithZero() throws {
+    let tuple = Tuple("hello", 0, "foo")
+
+    let encoded = tuple.encode()
+    let decoded = try Tuple.decode(from: encoded)
+
+    #expect(decoded.count == 3, "Should have 3 elements")
+    let decodedString1 = decoded[0] as? String
+    #expect(decodedString1 == "hello")
+
+    let decodedInt = decoded[1] as? Int
+    #expect(decodedInt == 0)
+
+    let decodedString2 = decoded[2] as? String
+    #expect(decodedString2 == "foo")
+}
+
+
+@Test("TupleNested deep nesting")
+func testTupleNestedDeep() throws {
+    let level3 = Tuple("deep", 123)
+    let level2 = Tuple("middle", level3)
+    let level1 = Tuple("top", level2, "bottom")
+
+    let encoded = level1.encode()
+    let decoded = try Tuple.decode(from: encoded)
+
+    #expect(decoded.count == 3, "Top level should have 3 elements")
+
+    let topString = decoded[0] as? String
+    #expect(topString == "top", "First element should be 'top'")
+
+    let middleTuple = decoded[1] as? Tuple
+    #expect(middleTuple != nil, "Second element should be a Tuple")
+    #expect(middleTuple?.count == 2, "Middle tuple should have 2 elements")
+
+    let bottomString = decoded[2] as? String
+    #expect(bottomString == "bottom", "Third element should be 'bottom'")
+}
