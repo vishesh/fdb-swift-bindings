@@ -203,16 +203,16 @@ func testTupleInt64LargeValues() throws {
     let largeNegative: Int64 = Int64.min + 1
 
     let encodedPos = largePositive.encodeTuple()
-    // let encodedNeg = largeNegative.encodeTuple()
+    let encodedNeg = largeNegative.encodeTuple()
 
     var offsetPos = 1
     var offsetNeg = 1
 
     let decodedPos = try Int64.decodeTuple(from: encodedPos, at: &offsetPos)
-    // let decodedNeg = try Int64.decodeTuple(from: encodedNeg, at: &offsetNeg)
+    let decodedNeg = try Int64.decodeTuple(from: encodedNeg, at: &offsetNeg)
 
     #expect(decodedPos == largePositive, "Should decode back to Int64.max")
-    // #expect(decodedNeg == largeNegative, "Should decode back to Int64.min")
+    #expect(decodedNeg == largeNegative, "Should decode back to Int64.min")
 }
 
 @Test("TupleInt32 encoding and decoding")
