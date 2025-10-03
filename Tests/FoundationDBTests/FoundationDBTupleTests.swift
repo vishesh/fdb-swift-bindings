@@ -151,12 +151,23 @@ func testTupleInt64SmallPositive() throws {
     #expect(offset == encoded.count, "Offset should advance to end of encoded data")
 }
 
+@Test("TupleInt64 encoding and decoding - Very small negative")
+func testTupleInt64VerySmallNegative() throws {
+    let testInt: Int64 = -42
+    let encoded = testInt.encodeTuple()
+
+    #expect(encoded.first == 0x13)
+
+    var offset = 1
+    let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
+    #expect(decoded == testInt, "Should decode back to original positive integer")
+    #expect(offset == encoded.count, "Offset should advance to end of encoded data")
+}
+
 @Test("TupleInt64 encoding and decoding - Large negative")
 func testTupleInt64LargeNegative() throws {
     let testInt: Int64 = -89_034_333_444
     let encoded = testInt.encodeTuple()
-
-    // #expect(encoded.first == 0x13, "Small negative should use 0x13 type code (negativeInt1)")
 
     var offset = 1
     let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
@@ -175,7 +186,7 @@ func testTupleInt64VeryLargeNegative() throws {
     #expect(offset == encoded.count, "Offset should advance to end of encoded data")
 }
 
-@Test("TupleInt64 encoding and decoding - Very Large negative")
+@Test("TupleInt64 encoding and decoding - VeryVery Large negative")
 func testTupleInt64VeryLargeNegative2() throws {
     let testInt: Int64 = -(1 <<  60) - 34897432
     let encoded = testInt.encodeTuple()
@@ -294,4 +305,36 @@ func testTupleNestedDeep() throws {
 
     let bottomString = decoded[2] as? String
     #expect(bottomString == "bottom", "Third element should be 'bottom'")
+}
+
+@Test("TupleInt64 encoding and decoding - 1 million distributed integers")
+func testTupleInt64DistributedIntegers() throws {
+    // Deterministic random number generator using LCG algorithm
+    var seed: UInt64 = 12345
+    func nextRandom() -> Int64 {
+        // Generate full 64-bit value
+        seed = seed &* 6364136223846793005 &+ 1442695040888963407
+        return Int64(bitPattern: seed)
+    }
+
+    // Test 10000 integers
+    var positive: Int = 0
+    var negative: Int = 0
+    for _ in 0..<1000000 {
+        let testInt = nextRandom()
+        let encoded = testInt.encodeTuple()
+
+        if testInt > 0 {
+            positive += 1
+        } else if testInt < 0 {
+            negative += 1
+        }
+
+        var offset = 1
+        let decoded = try Int64.decodeTuple(from: encoded, at: &offset)
+        #expect(decoded == testInt, "Integer \(testInt) should encode and decode correctly")
+        #expect(offset == encoded.count, "Offset should advance to end of encoded data")
+    }
+
+    print("tested with n_positives = \(positive), n_negatives = \(negative)")
 }
