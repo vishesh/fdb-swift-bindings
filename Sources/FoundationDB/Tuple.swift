@@ -73,7 +73,7 @@ public struct Tuple: Sendable {
         for element in elements {
             result.append(contentsOf: element.encodeTuple())
         }
-        return result 
+        return result
     }
 
     public static func decode(from bytes: Fdb.Bytes) throws -> [any TupleElement] {
@@ -185,7 +185,8 @@ extension Fdb.Bytes: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Fdb.Bytes {
+    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Fdb.Bytes
+    {
         var decoded = Fdb.Bytes()
 
         while offset < bytes.count {
@@ -214,7 +215,9 @@ extension Bool: TupleElement {
     }
 
     public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Bool {
-        guard offset > 0 else { throw TupleError.invalidDecoding("Bool decoding requires type code") }
+        guard offset > 0 else {
+            throw TupleError.invalidDecoding("Bool decoding requires type code")
+        }
         let typeCode = bytes[offset - 1]
 
         switch typeCode {
@@ -282,7 +285,9 @@ extension UUID: TupleElement {
     public func encodeTuple() -> Fdb.Bytes {
         var encoded = [TupleTypeCode.uuid.rawValue]
         let (u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16) = self.uuid
-        encoded.append(contentsOf: [u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16])
+        encoded.append(contentsOf: [
+            u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16,
+        ])
         return encoded
     }
 
@@ -294,10 +299,12 @@ extension UUID: TupleElement {
         let uuidBytes = Array(bytes[offset..<offset + 16])
         offset += 16
 
-        let uuidTuple = (uuidBytes[0], uuidBytes[1], uuidBytes[2], uuidBytes[3],
-                        uuidBytes[4], uuidBytes[5], uuidBytes[6], uuidBytes[7],
-                        uuidBytes[8], uuidBytes[9], uuidBytes[10], uuidBytes[11],
-                        uuidBytes[12], uuidBytes[13], uuidBytes[14], uuidBytes[15])
+        let uuidTuple = (
+            uuidBytes[0], uuidBytes[1], uuidBytes[2], uuidBytes[3],
+            uuidBytes[4], uuidBytes[5], uuidBytes[6], uuidBytes[7],
+            uuidBytes[8], uuidBytes[9], uuidBytes[10], uuidBytes[11],
+            uuidBytes[12], uuidBytes[13], uuidBytes[14], uuidBytes[15]
+        )
 
         return UUID(uuid: uuidTuple)
     }
@@ -312,7 +319,7 @@ private let sizeLimits: [UInt64] = [
     (1 << (5 * 8)) - 1,
     (1 << (6 * 8)) - 1,
     (1 << (7 * 8)) - 1,
-    UInt64.max  // (1 << (8 * 8)) - 1 would overflow, so use UInt64.max instead
+    UInt64.max,  // (1 << (8 * 8)) - 1 would overflow, so use UInt64.max instead
 ]
 
 private func bisectLeft(_ value: UInt64) -> Int {
@@ -325,137 +332,81 @@ private func bisectLeft(_ value: UInt64) -> Int {
 
 extension Int64: TupleElement {
     public func encodeTuple() -> Fdb.Bytes {
-        if self == 0 {
-            return [TupleTypeCode.intZero.rawValue]
-        }
-
-        if self >= 0 {
-            return encodeUint(UInt64(self))
-        } else {
-            return encodeInt(self)
-        }
-    }
-
-    private func encodeUint(_ value: UInt64) -> Fdb.Bytes {
-        let n = bisectLeft(value)
-
-        if n >= 8 {
-            var encoded = [TupleTypeCode.positiveIntEnd.rawValue, UInt8(8)]
-            let bigEndianValue = value.bigEndian
-            let bytes = withUnsafeBytes(of: bigEndianValue) { Array($0) }
-            encoded.append(contentsOf: bytes)
-            return encoded
-        }
-
-        var encoded = [TupleTypeCode.intZero.rawValue + UInt8(n)]
-        let bigEndianValue = value.bigEndian
-        let bytes = withUnsafeBytes(of: bigEndianValue) { Array($0) }
-        encoded.append(contentsOf: bytes.suffix(n))
-        return encoded
+        return encodeInt(self)
     }
 
     private func encodeInt(_ value: Int64) -> Fdb.Bytes {
-        let absValue = value == Int64.min ? UInt64(Int64.max) &+ 1 : UInt64(-value)
-        let n = bisectLeft(absValue)
-
-        if n >= 8 {
-            var encoded = [TupleTypeCode.negativeIntStart.rawValue, UInt8(8) ^ 0xFF]
-            let onesComplement = value &- 1
-            let bigEndianValue = UInt64(bitPattern: onesComplement).bigEndian
-            let bytes = withUnsafeBytes(of: bigEndianValue) { Array($0) }
-            encoded.append(contentsOf: bytes)
-            return encoded
+        if value == 0 {
+            return [TupleTypeCode.intZero.rawValue]
         }
 
-        var encoded = [TupleTypeCode.intZero.rawValue - UInt8(n)]
-        let maxValue = Int64(sizeLimits[n])
-        let offsetEncoded = maxValue &+ value
-        let bigEndianValue = UInt64(bitPattern: offsetEncoded).bigEndian
-        let bytes = withUnsafeBytes(of: bigEndianValue) { Array($0) }
-        encoded.append(contentsOf: bytes.suffix(n))
+        var encoded = Fdb.Bytes()
+        if value > 0 {
+            let n = bisectLeft(UInt64(value))
+            encoded.append(TupleTypeCode.intZero.rawValue + UInt8(n))
+            let bigEndianValue = UInt64(bitPattern: value).bigEndian
+            let bytes = withUnsafeBytes(of: bigEndianValue) { Array($0) }
+            encoded.append(contentsOf: bytes.suffix(n))
+        } else {
+            let n = bisectLeft(UInt64(-value))
+            encoded.append(TupleTypeCode.intZero.rawValue - UInt8(n))
+
+            if n < 8 {
+                let offset = UInt64(sizeLimits[n]) &+ UInt64(bitPattern: value)
+                let bigEndianValue = offset.bigEndian
+                let bytes = withUnsafeBytes(of: bigEndianValue) { Array($0) }
+                encoded.append(contentsOf: bytes.suffix(n))
+            } else {
+                // n == 8 case
+                let offset = UInt64(bitPattern: value)
+                let bigEndianValue = offset.bigEndian
+                let bytes = withUnsafeBytes(of: bigEndianValue) { Array($0) }
+                encoded.append(contentsOf: bytes)
+            }
+        }
+
         return encoded
     }
 
     public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Int64 {
-        guard offset > 0 else { throw TupleError.invalidDecoding("Int64 decoding requires type code") }
+        guard offset > 0 else {
+            throw TupleError.invalidDecoding("Int64 decoding requires type code")
+        }
         let typeCode = bytes[offset - 1]
 
         if typeCode == TupleTypeCode.intZero.rawValue {
             return 0
         }
 
-        if typeCode == TupleTypeCode.positiveIntEnd.rawValue {
-            guard offset < bytes.count else {
-                throw TupleError.invalidDecoding("Not enough bytes for large positive integer length")
-            }
-            let byteLength = Int(bytes[offset])
-            offset += 1
-            return try decodePositiveInt(from: bytes, at: &offset, byteLength: byteLength)
+        var n = Int(typeCode) - Int(TupleTypeCode.intZero.rawValue)
+        var neg = false
+        if n < 0 {
+            n = -n
+            neg = true
         }
 
-        if typeCode == TupleTypeCode.negativeIntStart.rawValue {
-            guard offset < bytes.count else {
-                throw TupleError.invalidDecoding("Not enough bytes for large negative integer length")
-            }
-            let byteLength = Int(bytes[offset] ^ 0xFF)
-            offset += 1
-            return try decodeNegativeInt(from: bytes, at: &offset, byteLength: byteLength)
+        var bp = [UInt8](repeating: 0, count: 8)
+        bp.replaceSubrange((8 - n)..<8, with: bytes[offset...(offset+n-1)])
+        offset += n
+
+        var ret: Int64 = 0
+        for byte in bp {
+            ret = (ret << 8) | Int64(byte)
         }
 
-        let n = Int(typeCode) - Int(TupleTypeCode.intZero.rawValue)
-        let isNegative = n < 0
-        let byteLength = abs(n)
-
-        guard offset + byteLength <= bytes.count else {
-            throw TupleError.invalidDecoding("Not enough bytes for integer")
+        if neg {
+             if n == 8 {
+                 return ret
+             } else {
+                 return ret - Int64(sizeLimits[n])
+             }
         }
 
-        let intBytes = Array(bytes[offset..<offset + byteLength])
-        offset += byteLength
-
-        var value: Int64 = 0
-        for byte in intBytes {
-            value = (value << 8) | Int64(byte)
+        if ret > 0 {
+            return ret
         }
 
-        if isNegative {
-            return value - Int64(sizeLimits[byteLength])
-        }
-
-        return value
-    }
-
-    private static func decodePositiveInt(from bytes: Fdb.Bytes, at offset: inout Int, byteLength: Int) throws -> Int64 {
-        guard offset + byteLength <= bytes.count else {
-            throw TupleError.invalidDecoding("Not enough bytes for positive integer")
-        }
-
-        let intBytes = Array(bytes[offset..<offset + byteLength])
-        offset += byteLength
-
-        var value: Int64 = 0
-        for byte in intBytes {
-            value = (value << 8) | Int64(byte)
-        }
-        return value
-    }
-
-    private static func decodeNegativeInt(from bytes: Fdb.Bytes, at offset: inout Int, byteLength: Int) throws -> Int64 {
-        guard offset + byteLength <= bytes.count else {
-            throw TupleError.invalidDecoding("Not enough bytes for negative integer")
-        }
-
-        let intBytes = Array(bytes[offset..<offset + byteLength])
-        offset += byteLength
-
-        var value: Int64 = 0
-        for byte in intBytes {
-            value = (value << 8) | Int64(byte)
-        }
-
-        // The encoding does onesComplement = value &- 1, so we need to add 1 back when decoding
-        let maxValue = Int64(1) << (byteLength * 8)
-        return value - maxValue + 1
+        return ret
     }
 }
 
@@ -540,7 +491,8 @@ extension UInt64: TupleElement {
     public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> UInt64 {
         let value = try Int64.decodeTuple(from: bytes, at: &offset)
         guard value >= 0 else {
-            throw TupleError.invalidDecoding("Negative value \(value) cannot be converted to UInt64")
+            throw TupleError.invalidDecoding(
+                "Negative value \(value) cannot be converted to UInt64")
         }
         return UInt64(value)
     }
