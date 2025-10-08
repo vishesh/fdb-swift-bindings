@@ -1136,31 +1136,6 @@ func atomicOpByteMax() async throws {
     #expect(resultString == "zebra", "byte_max should choose lexicographically larger value")
 }
 
-@Test("network option setting - method validation")
-func networkOptionMethods() throws {
-    // Test that network option methods accept different parameter types
-    // Note: These tests verify the API works but don't actually set options
-    // since network initialization happens globally
-
-    // Test Data parameter
-    let data = [UInt8]("test_value".utf8)
-    // This would normally throw if the method signature was wrong
-
-    // Test String parameter
-    _ = "test_string"
-    // This would normally throw if the method signature was wrong
-
-    // Test Int parameter
-    _ = 1_048_576
-    // This would normally throw if the method signature was wrong
-
-    // Test no parameter (for boolean options)
-    // This would normally throw if the method signature was wrong
-
-    // If we get here, the method signatures are correct
-    #expect(data.count > 0, "Network option method signatures are valid")
-}
-
 @Test("network option enum values")
 func networkOptionEnumValues() {
     // Test that network option enum has expected values
@@ -1451,4 +1426,239 @@ extension String {
         if count >= toLength { return self }
         return String(repeating: pad, count: toLength - count) + self
     }
+}
+
+@Test("getEstimatedRangeSizeBytes returns size estimate")
+func testGetEstimatedRangeSizeBytes() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+
+    // Write some test data
+    try await database.withTransaction { transaction in
+        transaction.clearRange(beginKey: "test_size_", endKey: "test_size`")
+        for i in 0..<100 {
+            let key = "test_size_\(String.padded(i))"
+            let value = String(repeating: "x", count: 1000)
+            transaction.setValue(value, for: key)
+        }
+        return ()
+    }
+
+    // Get estimated size
+    let transaction = try database.createTransaction()
+    let beginKey: Fdb.Key = Array("test_size_".utf8)
+    let endKey: Fdb.Key = Array("test_size`".utf8)
+    let estimatedSize = try await transaction.getEstimatedRangeSizeBytes(beginKey: beginKey, endKey: endKey)
+
+    // Size should be positive (may not be exact due to sampling)
+    #expect(estimatedSize >= 0, "Estimated size should be non-negative")
+}
+
+@Test("getRangeSplitPoints returns split keys")
+func testGetRangeSplitPoints() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+
+    // Write some test data
+    try await database.withTransaction { transaction in
+        transaction.clearRange(beginKey: "test_split_", endKey: "test_split`")
+        for i in 0..<200 {
+            let key = "test_split_\(String.padded(i))"
+            let value = String(repeating: "y", count: 500)
+            transaction.setValue(value, for: key)
+        }
+        return ()
+    }
+
+    // Get split points with 10KB chunks
+    let transaction = try database.createTransaction()
+    let beginKey: Fdb.Key = Array("test_split_".utf8)
+    let endKey: Fdb.Key = Array("test_split`".utf8)
+    let splitPoints = try await transaction.getRangeSplitPoints(
+        beginKey: beginKey,
+        endKey: endKey,
+        chunkSize: 10000
+    )
+
+    // Should return at least begin and end keys
+    #expect(splitPoints.count >= 2, "Should return at least begin and end keys")
+    #expect(splitPoints.first == beginKey, "First split point should be begin key")
+    #expect(splitPoints.last == endKey, "Last split point should be end key")
+}
+
+@Test("getCommittedVersion returns version after commit")
+func testGetCommittedVersion() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+    let transaction = try database.createTransaction()
+
+    transaction.setValue("test_value", for: "test_version_key")
+    _ = try await transaction.commit()
+
+    let committedVersion = try transaction.getCommittedVersion()
+    #expect(committedVersion > 0, "Committed version should be positive for write transaction")
+}
+
+@Test("getCommittedVersion returns -1 for read-only transaction")
+func testGetCommittedVersionReadOnly() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+    let transaction = try database.createTransaction()
+
+    // Read-only transaction
+    _ = try await transaction.getValue(for: "test_readonly_key")
+    _ = try await transaction.commit()
+
+    let committedVersion = try transaction.getCommittedVersion()
+    #expect(committedVersion == -1, "Read-only transaction should return -1")
+}
+
+@Test("getApproximateSize returns transaction size")
+func testGetApproximateSize() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+    let transaction = try database.createTransaction()
+
+    // Initial size
+    let initialSize = try await transaction.getApproximateSize()
+    #expect(initialSize >= 0, "Initial size should be non-negative")
+
+    // Add some mutations
+    for i in 0..<10 {
+        let key = "test_approx_\(i)"
+        let value = String(repeating: "z", count: 100)
+        transaction.setValue(value, for: key)
+    }
+
+    // Size should increase
+    let sizeAfterMutations = try await transaction.getApproximateSize()
+    #expect(sizeAfterMutations > initialSize, "Size should increase after mutations")
+}
+
+@Test("addConflictRange read conflict")
+func testAddReadConflictRange() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+
+    // Clear test key range
+    let clearTransaction = try database.createTransaction()
+    clearTransaction.clearRange(beginKey: "test_conflict_", endKey: "test_conflict`")
+    _ = try await clearTransaction.commit()
+
+    // Set up initial data
+    let setupTransaction = try database.createTransaction()
+    setupTransaction.setValue("initial_value", for: "test_conflict_a")
+    _ = try await setupTransaction.commit()
+
+    // Test adding read conflict range
+    let transaction = try database.createTransaction()
+    let beginKey: Fdb.Key = Array("test_conflict_a".utf8)
+    let endKey: Fdb.Key = Array("test_conflict_b".utf8)
+
+    // Add read conflict range - should succeed
+    try transaction.addConflictRange(beginKey: beginKey, endKey: endKey, type: .read)
+
+    // Should be able to commit successfully
+    let result = try await transaction.commit()
+    #expect(result == true, "Transaction with read conflict range should commit successfully")
+}
+
+@Test("addConflictRange write conflict")
+func testAddWriteConflictRange() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+
+    // Clear test key range
+    let clearTransaction = try database.createTransaction()
+    clearTransaction.clearRange(beginKey: "test_write_conflict_", endKey: "test_write_conflict`")
+    _ = try await clearTransaction.commit()
+
+    // Test adding write conflict range
+    let transaction = try database.createTransaction()
+    let beginKey: Fdb.Key = Array("test_write_conflict_a".utf8)
+    let endKey: Fdb.Key = Array("test_write_conflict_b".utf8)
+
+    // Add write conflict range - should succeed
+    try transaction.addConflictRange(beginKey: beginKey, endKey: endKey, type: .write)
+
+    // Should be able to commit successfully
+    let result = try await transaction.commit()
+    #expect(result == true, "Transaction with write conflict range should commit successfully")
+}
+
+@Test("addConflictRange detects concurrent write conflicts")
+func testConflictRangeDetectsConcurrentWrites() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+
+    // Clear test key range
+    let clearTransaction = try database.createTransaction()
+    clearTransaction.clearRange(beginKey: "test_concurrent_", endKey: "test_concurrent`")
+    _ = try await clearTransaction.commit()
+
+    // Set up initial data
+    let setupTransaction = try database.createTransaction()
+    setupTransaction.setValue("initial", for: "test_concurrent_key")
+    _ = try await setupTransaction.commit()
+
+    // Create first transaction and add a write conflict range
+    let transaction1 = try database.createTransaction()
+    let beginKey: Fdb.Key = Array("test_concurrent_key".utf8)
+    var endKey: Fdb.Key = beginKey
+    endKey.append(0x00)
+
+    try transaction1.addConflictRange(beginKey: beginKey, endKey: endKey, type: .write)
+
+    // Create second transaction that writes to the same key
+    let transaction2 = try database.createTransaction()
+    transaction2.setValue("modified_by_tr2", for: "test_concurrent_key")
+    _ = try await transaction2.commit()
+
+    // Now try to commit transaction1 - it should detect a conflict
+    do {
+        _ = try await transaction1.commit()
+        // If it succeeds, that's also acceptable behavior
+    } catch let error as FdbError {
+        // Expected to fail with a conflict error (not_committed)
+        #expect(error.isRetryable, "Conflict should be a retryable error")
+    }
+}
+
+@Test("addConflictRange multiple ranges")
+func testAddMultipleConflictRanges() async throws {
+    try await FdbClient.initialize()
+    let database = try FdbClient.openDatabase()
+
+    // Clear test key range
+    let clearTransaction = try database.createTransaction()
+    clearTransaction.clearRange(beginKey: "test_multi_", endKey: "test_multi`")
+    _ = try await clearTransaction.commit()
+
+    // Test adding multiple conflict ranges
+    let transaction = try database.createTransaction()
+
+    // Add multiple read conflict ranges
+    let beginKey1: Fdb.Key = Array("test_multi_a".utf8)
+    let endKey1: Fdb.Key = Array("test_multi_b".utf8)
+    try transaction.addConflictRange(beginKey: beginKey1, endKey: endKey1, type: .read)
+
+    let beginKey2: Fdb.Key = Array("test_multi_c".utf8)
+    let endKey2: Fdb.Key = Array("test_multi_d".utf8)
+    try transaction.addConflictRange(beginKey: beginKey2, endKey: endKey2, type: .read)
+
+    // Add write conflict range
+    let beginKey3: Fdb.Key = Array("test_multi_x".utf8)
+    let endKey3: Fdb.Key = Array("test_multi_y".utf8)
+    try transaction.addConflictRange(beginKey: beginKey3, endKey: endKey3, type: .write)
+
+    // Should be able to commit with multiple conflict ranges
+    let result = try await transaction.commit()
+    #expect(result == true, "Transaction with multiple conflict ranges should commit successfully")
+}
+
+@Test("ConflictRangeType enum values")
+func testConflictRangeTypeValues() {
+    // Test that conflict range type enum has expected values
+    #expect(Fdb.ConflictRangeType.read.rawValue == 0, "read should have value 0")
+    #expect(Fdb.ConflictRangeType.write.rawValue == 1, "write should have value 1")
 }

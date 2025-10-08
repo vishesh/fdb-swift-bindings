@@ -218,6 +218,56 @@ public protocol ITransaction: Sendable {
     /// - Throws: `FdbError` if the operation fails.
     func getReadVersion() async throws -> Int64
 
+    /// Handles transaction errors and implements retry logic with exponential backoff.
+    ///
+    /// If this method returns successfully, the transaction has been reset and can be retried.
+    /// If it throws an error, the transaction should not be retried.
+    ///
+    /// - Parameter error: The error encountered during transaction execution.
+    /// - Throws: `FdbError` if the error is not retryable or retry limits have been exceeded.
+    func onError(_ error: FdbError) async throws
+
+    /// Returns an estimated byte size of the specified key range.
+    ///
+    /// The estimate is calculated based on sampling done by FDB server. Larger key-value pairs
+    /// are more likely to be sampled. For accuracy, use on large ranges (>3MB recommended).
+    ///
+    /// - Parameters:
+    ///   - beginKey: The start of the range (inclusive).
+    ///   - endKey: The end of the range (exclusive).
+    /// - Returns: The estimated size in bytes.
+    /// - Throws: `FdbError` if the operation fails.
+    func getEstimatedRangeSizeBytes(beginKey: Fdb.Key, endKey: Fdb.Key) async throws -> Int64
+
+    /// Returns a list of keys that can split the given range into roughly equal chunks.
+    ///
+    /// The returned split points include the start and end keys of the range.
+    ///
+    /// - Parameters:
+    ///   - beginKey: The start of the range.
+    ///   - endKey: The end of the range.
+    ///   - chunkSize: The desired size of each chunk in bytes.
+    /// - Returns: An array of keys representing split points.
+    /// - Throws: `FdbError` if the operation fails.
+    func getRangeSplitPoints(beginKey: Fdb.Key, endKey: Fdb.Key, chunkSize: Int64) async throws -> [[UInt8]]
+
+    /// Returns the version number at which a committed transaction modified the database.
+    ///
+    /// Must only be called after a successful commit. Read-only transactions return -1.
+    ///
+    /// - Returns: The committed version number.
+    /// - Throws: `FdbError` if called before commit or if the operation fails.
+    func getCommittedVersion() throws -> Int64
+
+    /// Returns the approximate transaction size so far.
+    ///
+    /// This is the sum of estimated sizes of mutations, read conflict ranges, and write conflict ranges.
+    /// Can be called multiple times before commit.
+    ///
+    /// - Returns: The approximate size in bytes.
+    /// - Throws: `FdbError` if the operation fails.
+    func getApproximateSize() async throws -> Int64
+
     /// Performs an atomic operation on a key.
     ///
     /// - Parameters:
@@ -225,6 +275,18 @@ public protocol ITransaction: Sendable {
     ///   - param: The parameter for the atomic operation.
     ///   - mutationType: The type of atomic operation to perform.
     func atomicOp(key: Fdb.Key, param: Fdb.Value, mutationType: Fdb.MutationType)
+
+    /// Adds a conflict range to the transaction.
+    ///
+    /// Conflict ranges are used to manually declare the read and write sets of the transaction.
+    /// This can be useful for ensuring serializability when certain keys are accessed indirectly.
+    ///
+    /// - Parameters:
+    ///   - beginKey: The start of the range (inclusive) as a byte array.
+    ///   - endKey: The end of the range (exclusive) as a byte array.
+    ///   - type: The type of conflict range (read or write).
+    /// - Throws: `FdbError` if the operation fails.
+    func addConflictRange(beginKey: Fdb.Key, endKey: Fdb.Key, type: Fdb.ConflictRangeType) throws
 
     // MARK: - Transaction option methods
 
