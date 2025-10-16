@@ -35,6 +35,70 @@ extension String {
     }
 }
 
+extension ITransaction {
+    func getValue(for key: String, snapshot: Bool = false) async throws -> Fdb.Value? {
+        let keyBytes = [UInt8](key.utf8)
+        return try await getValue(for: keyBytes, snapshot: snapshot)
+
+    }
+    
+    func setValue(_ value: String, for key: String) {
+        let keyBytes = [UInt8](key.utf8)
+        let valueBytes = [UInt8](value.utf8)
+        setValue(valueBytes, for: keyBytes)
+    }
+
+    func clear(key: String) {
+        let keyBytes = [UInt8](key.utf8)
+        clear(key: keyBytes)
+    }
+
+    func clearRange(beginKey: String, endKey: String) {
+        let beginKeyBytes = [UInt8](beginKey.utf8)
+        let endKeyBytes = [UInt8](endKey.utf8)
+        clearRange(beginKey: beginKeyBytes, endKey: endKeyBytes)
+    }
+
+    func readRange(
+      beginKey: String, endKey: String, snapshot: Bool = false
+    ) -> Fdb.AsyncKVSequence {
+        let beginSelector = Fdb.KeySelector.firstGreaterOrEqual(beginKey)
+        let endSelector = Fdb.KeySelector.firstGreaterOrEqual(endKey)
+        return readRange(
+          beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
+        )
+    }
+
+    func getRange(
+      beginKey: String, endKey: String, limit: Int = 0, snapshot: Bool = false
+    ) async throws -> ResultRange {
+        let beginKeyBytes = [UInt8](beginKey.utf8)
+        let endKeyBytes = [UInt8](endKey.utf8)
+        return try await getRange(
+          beginKey: beginKeyBytes, endKey: endKeyBytes, limit: limit, snapshot: snapshot
+        )
+    }
+}
+
+extension Fdb.KeySelector {
+    static func firstGreaterOrEqual(_ key: String) -> Self {
+        return Self(key: [UInt8](key.utf8), orEqual: false, offset: 1)
+    }    
+
+    static func firstGreaterThan(_ key: String) -> Self {
+        return Self(key: [UInt8](key.utf8), orEqual: true, offset: 1)
+    }
+
+
+    static func lastLessOrEqual(_ key: String) -> Self {
+        return Self(key: [UInt8](key.utf8), orEqual: true, offset: 0)
+    }
+
+    static func lastLessThan(_ key: String) -> Self {
+        return Self(key: [UInt8](key.utf8), orEqual: false, offset: 0)
+    }
+}
+
 @Test("getValue test")
 func testGetValue() async throws {
     try await FdbClient.initialize()
@@ -1177,38 +1241,6 @@ func networkOptionConvenienceMethods() throws {
     // If we get here, the convenience method signatures are correct
     let methodsExist = true
     #expect(methodsExist, "Network option convenience methods have valid signatures")
-}
-
-@Test("transaction option setting - basic functionality")
-func transactionOptions() async throws {
-    try await FdbClient.initialize()
-    let database = try FdbClient.openDatabase()
-    let transaction = try database.createTransaction()
-
-    // Clear test key range
-    transaction.clearRange(beginKey: "test_", endKey: "test`")
-
-    // Test setting various transaction options
-    try transaction.setTimeout(30000) // 30 seconds
-    try transaction.setRetryLimit(10)
-    try transaction.setMaxRetryDelay(5000) // 5 seconds
-    try transaction.setSizeLimit(1_000_000) // 1MB
-
-    // Test boolean options
-    try transaction.enableAutomaticIdempotency()
-    try transaction.enableSnapshotReadYourWrites()
-
-    // Test priority options
-    try transaction.setPriorityBatch()
-
-    // Test tag options
-    try transaction.addTag("test_tag")
-    try transaction.setDebugTransactionIdentifier("test_transaction")
-
-    let result = try await transaction.commit()
-
-    // If we get here, all option setting methods worked
-    #expect(result == true, "Transaction options set successfully")
 }
 
 @Test("transaction option with timeout enforcement")

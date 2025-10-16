@@ -72,7 +72,7 @@ public extension Fdb {
         /// Whether to use snapshot reads
         let snapshot: Bool
         /// Maximum number of key-value pairs to fetch per batch (0 = use FDB default)
-        let batchLimit: Int32 = 0
+        let batchLimit: Int = 0
 
         /// Creates a new async iterator for this sequence.
         ///
@@ -118,7 +118,7 @@ public extension Fdb {
             /// Whether to use snapshot reads
             private let snapshot: Bool
             /// Batch size limit
-            private let batchLimit: Int32
+            private let batchLimit: Int
 
             /// Current batch of records being served
             private var currentBatch: ResultRange = .init(records: [], more: true)
@@ -147,7 +147,7 @@ public extension Fdb {
             ///   - batchLimit: Maximum items per batch (0 = FDB default)
             init(
                 transaction: ITransaction, beginSelector: Fdb.KeySelector,
-                endSelector: Fdb.KeySelector, snapshot: Bool, batchLimit: Int32
+                endSelector: Fdb.KeySelector, snapshot: Bool, batchLimit: Int
             ) {
                 self.transaction = transaction
                 nextBeginSelector = beginSelector

@@ -36,13 +36,9 @@ import CFoundationDB
 /// let network = FdbNetwork.shared
 /// try network.initialize(version: 740)
 /// ```
-@MainActor
-class FdbNetwork {
+final class FdbNetwork: Sendable {
     /// The shared singleton instance of the network manager.
     static let shared = FdbNetwork()
-
-    /// Indicates whether the network has been set up.
-    private nonisolated(unsafe) var networkSetup = false
 
     /// The pthread handle for the network thread.
     private nonisolated(unsafe) var networkThread: pthread_t? = nil
@@ -54,20 +50,20 @@ class FdbNetwork {
     ///
     /// - Parameter version: The FoundationDB API version to use.
     /// - Throws: `FdbError` if any step of initialization fails.
-    func initialize(version: Int32) throws {
-        if networkSetup {
+    func initialize(version: Int) throws {
+        if networkThread == nil {
             // throw FdbError(code: 2201)
             return
         }
 
-        try selectAPIVersion(version)
+        try selectAPIVersion(Int32(version))
         try setupNetwork()
         startNetwork()
     }
 
     /// Stops the FoundationDB network and waits for the network thread to complete.
     deinit {
-        if !networkSetup {
+        if networkThread == nil {
             return
         }
 
@@ -82,57 +78,8 @@ class FdbNetwork {
         }
     }
 
-    /// Selects the FoundationDB API version.
-    ///
-    /// - Parameter version: The API version to select.
-    /// - Throws: `FdbError` if the API version cannot be selected.
-    func selectAPIVersion(_ version: Int32) throws {
-        let error = fdb_select_api_version_impl(version, FDB_API_VERSION)
-        if error != 0 {
-            throw FdbError(code: error)
-        }
-    }
-
-    /// Sets up the FoundationDB network layer.
-    ///
-    /// This method must be called before starting the network thread.
-    ///
-    /// - Throws: `FdbError` if network setup fails or if already set up.X
-    func setupNetwork() throws {
-        guard !networkSetup else {
-            throw FdbError(.networkError)
-        }
-
-        let error = fdb_setup_network()
-        if error != 0 {
-            throw FdbError(code: error)
-        }
-
-        networkSetup = true
-    }
-
-    /// Starts the FoundationDB network thread.
-    ///
-    /// Creates and starts a pthread that runs the FoundationDB network event loop.
-    /// The network must be set up before calling this method.
-    func startNetwork() {
-        guard networkSetup else {
-            fatalError("Network must be setup before starting thread network")
-        }
-
-        var thread = pthread_t(bitPattern: 0)
-        let result = pthread_create(&thread, nil, { _ in
-            let error = fdb_run_network()
-            if error != 0 {
-                print("Network thread error: \(FdbError(code: error).description)")
-            }
-            return nil
-        }, nil)
-
-        if result == 0 {
-            networkThread = thread
-        }
-    }
+    /// Returns true is FDB network is initialized.
+    var isInitialized: Bool { networkThread != nil }
 
     /// Sets a network option with an optional byte array value.
     ///
@@ -178,5 +125,55 @@ class FdbNetwork {
     func setNetworkOption(_ option: Fdb.NetworkOption, value: Int) throws {
         let valueBytes = withUnsafeBytes(of: Int64(value)) { [UInt8]($0) }
         try setNetworkOption(option, value: valueBytes)
+    }
+    
+    /// Selects the FoundationDB API version.
+    ///
+    /// - Parameter version: The API version to select.
+    /// - Throws: `FdbError` if the API version cannot be selected.
+    private func selectAPIVersion(_ version: Int32) throws {
+        let error = fdb_select_api_version_impl(version, FDB_API_VERSION)
+        if error != 0 {
+            throw FdbError(code: error)
+        }
+    }
+
+    /// Sets up the FoundationDB network layer.
+    ///
+    /// This method must be called before starting the network thread.
+    ///
+    /// - Throws: `FdbError` if network setup fails or if already set up.X
+    private func setupNetwork() throws {
+        guard networkThread == nil else {
+            throw FdbError(.networkError)
+        }
+
+        let error = fdb_setup_network()
+        if error != 0 {
+            throw FdbError(code: error)
+        }
+    }
+
+    /// Starts the FoundationDB network thread.
+    ///
+    /// Creates and starts a pthread that runs the FoundationDB network event loop.
+    /// The network must be set up before calling this method.
+    private func startNetwork() {
+        guard networkThread != nil else {
+            fatalError("Network must be setup before starting thread network")
+        }
+
+        var thread = pthread_t(bitPattern: 0)
+        let result = pthread_create(&thread, nil, { _ in
+            let error = fdb_run_network()
+            if error != 0 {
+                print("Network thread error: \(FdbError(code: error).description)")
+            }
+            return nil
+        }, nil)
+
+        if result == 0 {
+            networkThread = thread
+        }
     }
 }

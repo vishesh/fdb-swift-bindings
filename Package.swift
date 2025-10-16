@@ -28,7 +28,6 @@ let package = Package(
     ],
     products: [
         .library(name: "FoundationDB", targets: ["FoundationDB"]),
-        .executable(name: "stacktester", targets: ["StackTester"])
     ],
     targets: [
         .systemLibrary(
@@ -37,10 +36,6 @@ let package = Package(
         .target(
             name: "FoundationDB",
             dependencies: ["CFoundationDB"],
-            path: "Sources/FoundationDB",
-            linkerSettings: [
-                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "/usr/local/lib"])
-            ]
         ),
         .testTarget(
             name: "FoundationDBTests",

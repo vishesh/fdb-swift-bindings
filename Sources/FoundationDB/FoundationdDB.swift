@@ -54,15 +54,6 @@ public protocol ITransaction: Sendable {
     /// Retrieves a value for the given key.
     ///
     /// - Parameters:
-    ///   - key: The key to retrieve as a string.
-    ///   - snapshot: Whether to perform a snapshot read.
-    /// - Returns: The value associated with the key, or nil if not found.
-    /// - Throws: `FdbError` if the operation fails.
-    func getValue(for key: String, snapshot: Bool) async throws -> Fdb.Value?
-
-    /// Retrieves a value for the given key.
-    ///
-    /// - Parameters:
     ///   - key: The key to retrieve as a byte array.
     ///   - snapshot: Whether to perform a snapshot read.
     /// - Returns: The value associated with the key, or nil if not found.
@@ -76,22 +67,10 @@ public protocol ITransaction: Sendable {
     ///   - key: The key to associate with the value.
     func setValue(_ value: Fdb.Value, for key: Fdb.Key)
 
-    /// Sets a value for the given key.
-    ///
-    /// - Parameters:
-    ///   - value: The value to set as a string.
-    ///   - key: The key to associate with the value as a string.
-    func setValue(_ value: String, for key: String)
-
     /// Removes a key-value pair from the database.
     ///
     /// - Parameter key: The key to remove as a byte array.
     func clear(key: Fdb.Key)
-
-    /// Removes a key-value pair from the database.
-    ///
-    /// - Parameter key: The key to remove as a string.
-    func clear(key: String)
 
     /// Removes all key-value pairs in the given range.
     ///
@@ -99,13 +78,6 @@ public protocol ITransaction: Sendable {
     ///   - beginKey: The start of the range (inclusive) as a byte array.
     ///   - endKey: The end of the range (exclusive) as a byte array.
     func clearRange(beginKey: Fdb.Key, endKey: Fdb.Key)
-
-    /// Removes all key-value pairs in the given range.
-    ///
-    /// - Parameters:
-    ///   - beginKey: The start of the range (inclusive) as a string.
-    ///   - endKey: The end of the range (exclusive) as a string.
-    func clearRange(beginKey: String, endKey: String)
 
     /// Resolves a key selector to an actual key.
     ///
@@ -146,7 +118,7 @@ public protocol ITransaction: Sendable {
     /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
     /// - Throws: `FdbError` if the operation fails.
     func getRange(
-        begin: Fdb.Selectable, end: Fdb.Selectable, limit: Int32, snapshot: Bool
+        begin: Fdb.Selectable, end: Fdb.Selectable, limit: Int, snapshot: Bool
     ) async throws -> ResultRange
 
     /// Retrieves key-value pairs within a range using key selectors.
@@ -159,20 +131,7 @@ public protocol ITransaction: Sendable {
     /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
     /// - Throws: `FdbError` if the operation fails.
     func getRange(
-        beginSelector: Fdb.KeySelector, endSelector: Fdb.KeySelector, limit: Int32, snapshot: Bool
-    ) async throws -> ResultRange
-
-    /// Retrieves key-value pairs within a range using string keys.
-    ///
-    /// - Parameters:
-    ///   - beginKey: The start key of the range as a string.
-    ///   - endKey: The end key of the range as a string.
-    ///   - limit: Maximum number of key-value pairs to return (0 for no limit).
-    ///   - snapshot: Whether to perform a snapshot read.
-    /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
-    /// - Throws: `FdbError` if the operation fails.
-    func getRange(
-        beginKey: String, endKey: String, limit: Int32, snapshot: Bool
+        beginSelector: Fdb.KeySelector, endSelector: Fdb.KeySelector, limit: Int, snapshot: Bool
     ) async throws -> ResultRange
 
     /// Retrieves key-value pairs within a range using byte array keys.
@@ -185,7 +144,7 @@ public protocol ITransaction: Sendable {
     /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
     /// - Throws: `FdbError` if the operation fails.
     func getRange(
-        beginKey: Fdb.Key, endKey: Fdb.Key, limit: Int32, snapshot: Bool
+        beginKey: Fdb.Key, endKey: Fdb.Key, limit: Int, snapshot: Bool
     ) async throws -> ResultRange
 
     /// Commits the transaction.
@@ -210,13 +169,13 @@ public protocol ITransaction: Sendable {
     /// Sets the read version for snapshot reads.
     ///
     /// - Parameter version: The version to use for snapshot reads.
-    func setReadVersion(_ version: Int64)
+    func setReadVersion(_ version: Fdb.Version)
 
     /// Gets the read version used by this transaction.
     ///
     /// - Returns: The transaction's read version.
     /// - Throws: `FdbError` if the operation fails.
-    func getReadVersion() async throws -> Int64
+    func getReadVersion() async throws -> Fdb.Version
 
     /// Handles transaction errors and implements retry logic with exponential backoff.
     ///
@@ -257,7 +216,7 @@ public protocol ITransaction: Sendable {
     ///
     /// - Returns: The committed version number.
     /// - Throws: `FdbError` if called before commit or if the operation fails.
-    func getCommittedVersion() throws -> Int64
+    func getCommittedVersion() throws -> Fdb.Version
 
     /// Returns the approximate transaction size so far.
     ///
@@ -359,30 +318,8 @@ public extension IDatabase {
 }
 
 public extension ITransaction {
-    func getValue(for key: String, snapshot: Bool = false) async throws -> Fdb.Value? {
-        let keyBytes = [UInt8](key.utf8)
-        return try await getValue(for: keyBytes, snapshot: snapshot)
-    }
-
     func getValue(for key: Fdb.Key, snapshot: Bool = false) async throws -> Fdb.Value? {
         try await getValue(for: key, snapshot: snapshot)
-    }
-
-    func setValue(_ value: String, for key: String) {
-        let keyBytes = [UInt8](key.utf8)
-        let valueBytes = [UInt8](value.utf8)
-        setValue(valueBytes, for: keyBytes)
-    }
-
-    func clear(key: String) {
-        let keyBytes = [UInt8](key.utf8)
-        clear(key: keyBytes)
-    }
-
-    func clearRange(beginKey: String, endKey: String) {
-        let beginKeyBytes = [UInt8](beginKey.utf8)
-        let endKeyBytes = [UInt8](endKey.utf8)
-        clearRange(beginKey: beginKeyBytes, endKey: endKeyBytes)
     }
 
     func getKey(selector: Fdb.Selectable, snapshot: Bool = false) async throws -> Fdb.Key? {
@@ -423,16 +360,6 @@ public extension ITransaction {
     }
 
     func readRange(
-        beginKey: String, endKey: String, snapshot: Bool = false
-    ) -> Fdb.AsyncKVSequence {
-        let beginSelector = Fdb.KeySelector.firstGreaterOrEqual(beginKey)
-        let endSelector = Fdb.KeySelector.firstGreaterOrEqual(endKey)
-        return readRange(
-            beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
-        )
-    }
-
-    func readRange(
         beginKey: Fdb.Key, endKey: Fdb.Key, snapshot: Bool = false
     ) -> Fdb.AsyncKVSequence {
         let beginSelector = Fdb.KeySelector.firstGreaterOrEqual(beginKey)
@@ -443,7 +370,7 @@ public extension ITransaction {
     }
 
     func getRange(
-        begin: Fdb.Selectable, end: Fdb.Selectable, limit: Int32 = 0, snapshot: Bool = false
+        begin: Fdb.Selectable, end: Fdb.Selectable, limit: Int = 0, snapshot: Bool = false
     ) async throws -> ResultRange {
         let beginSelector = begin.toKeySelector()
         let endSelector = end.toKeySelector()
@@ -453,7 +380,7 @@ public extension ITransaction {
     }
 
     func getRange(
-        beginSelector: Fdb.KeySelector, endSelector: Fdb.KeySelector, limit: Int32 = 0,
+        beginSelector: Fdb.KeySelector, endSelector: Fdb.KeySelector, limit: Int = 0,
         snapshot: Bool = false
     ) async throws -> ResultRange {
         try await getRange(
@@ -462,17 +389,7 @@ public extension ITransaction {
     }
 
     func getRange(
-        beginKey: String, endKey: String, limit: Int32 = 0, snapshot: Bool = false
-    ) async throws -> ResultRange {
-        let beginKeyBytes = [UInt8](beginKey.utf8)
-        let endKeyBytes = [UInt8](endKey.utf8)
-        return try await getRange(
-            beginKey: beginKeyBytes, endKey: endKeyBytes, limit: limit, snapshot: snapshot
-        )
-    }
-
-    func getRange(
-        beginKey: Fdb.Key, endKey: Fdb.Key, limit: Int32 = 0, snapshot: Bool = false
+        beginKey: Fdb.Key, endKey: Fdb.Key, limit: Int = 0, snapshot: Bool = false
     ) async throws -> ResultRange {
         try await getRange(beginKey: beginKey, endKey: endKey, limit: limit, snapshot: snapshot)
     }
@@ -561,14 +478,6 @@ public extension ITransaction {
 
     func enableRawAccess() throws {
         try setOption(.rawAccess)
-    }
-
-    func addTag(_ tag: String) throws {
-        try setOption(.tag, value: tag)
-    }
-
-    func addAutoThrottleTag(_ tag: String) throws {
-        try setOption(.autoThrottleTag, value: tag)
     }
 
     func setDebugTransactionIdentifier(_ identifier: String) throws {

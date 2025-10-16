@@ -19,7 +19,7 @@
  */
 import CFoundationDB
 
-public class FdbTransaction: ITransaction, @unchecked Sendable {
+public final class FdbTransaction: ITransaction, @unchecked Sendable {
     private let transaction: OpaquePointer
 
     init(transaction: OpaquePointer) {
@@ -124,7 +124,7 @@ public class FdbTransaction: ITransaction, @unchecked Sendable {
                     keyBytes.bindMemory(to: UInt8.self).baseAddress,
                     Int32(selector.key.count),
                     selector.orEqual ? 1 : 0,
-                    selector.offset,
+                    Int32(selector.offset),
                     snapshot ? 1 : 0
                 )
             )
@@ -147,11 +147,11 @@ public class FdbTransaction: ITransaction, @unchecked Sendable {
         ).getAsync()?.value
     }
 
-    public func setReadVersion(_ version: Int64) {
+    public func setReadVersion(_ version: Fdb.Version) {
         fdb_transaction_set_read_version(transaction, version)
     }
 
-    public func getReadVersion() async throws -> Int64 {
+    public func getReadVersion() async throws -> Fdb.Version {
         try await Future<ResultVersion>(
             fdb_transaction_get_read_version(transaction)
         ).getAsync()?.value ?? 0
@@ -196,8 +196,8 @@ public class FdbTransaction: ITransaction, @unchecked Sendable {
         }.getAsync()?.value ?? []
     }
 
-    public func getCommittedVersion() throws -> Int64 {
-        var version: Int64 = 0
+    public func getCommittedVersion() throws -> Fdb.Version {
+        var version: Fdb.Version = 0
         let err = fdb_transaction_get_committed_version(transaction, &version)
         if err != 0 {
             throw FdbError(code: err)
@@ -231,7 +231,7 @@ public class FdbTransaction: ITransaction, @unchecked Sendable {
     }
 
     public func getRange(
-        beginSelector: Fdb.KeySelector, endSelector: Fdb.KeySelector, limit: Int32 = 0,
+        beginSelector: Fdb.KeySelector, endSelector: Fdb.KeySelector, limit: Int = 0,
         snapshot: Bool
     ) async throws -> ResultRange {
         let future = beginSelector.key.withUnsafeBytes { beginKeyBytes in
@@ -242,12 +242,12 @@ public class FdbTransaction: ITransaction, @unchecked Sendable {
                         beginKeyBytes.bindMemory(to: UInt8.self).baseAddress,
                         Int32(beginSelector.key.count),
                         beginSelector.orEqual ? 1 : 0,
-                        beginSelector.offset,
+                        Int32(beginSelector.offset),
                         endKeyBytes.bindMemory(to: UInt8.self).baseAddress,
                         Int32(endSelector.key.count),
                         endSelector.orEqual ? 1 : 0,
-                        endSelector.offset,
-                        limit,
+                        Int32(endSelector.offset),
+                        Int32(limit),
                         0, // target_bytes = 0 (no limit)
                         FDBStreamingMode(-1), // mode = FDB_STREAMING_MODE_ITERATOR
                         1, // iteration = 1
@@ -262,7 +262,7 @@ public class FdbTransaction: ITransaction, @unchecked Sendable {
     }
 
     public func getRange(
-        beginKey: Fdb.Key, endKey: Fdb.Key, limit: Int32 = 0, snapshot: Bool
+        beginKey: Fdb.Key, endKey: Fdb.Key, limit: Int = 0, snapshot: Bool
     ) async throws -> ResultRange {
         let future = beginKey.withUnsafeBytes { beginKeyBytes in
             endKey.withUnsafeBytes { endKeyBytes in
@@ -277,7 +277,7 @@ public class FdbTransaction: ITransaction, @unchecked Sendable {
                         Int32(endKey.count),
                         1, // end_or_equal = false (exclusive)
                         0, // end_offset = 0
-                        limit,
+                        Int32(limit),
                         0, // target_bytes = 0 (no limit)
                         FDBStreamingMode(-1), // mode = FDB_STREAMING_MODE_ITERATOR
                         1, // iteration = 1

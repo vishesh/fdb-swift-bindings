@@ -27,7 +27,7 @@ public enum TupleError: Error, Sendable {
     case unsupportedType
 }
 
-public enum TupleTypeCode: UInt8, CaseIterable {
+enum TupleTypeCode: UInt8, CaseIterable {
     case null = 0x00
     case bytes = 0x01
     case string = 0x02
@@ -48,6 +48,7 @@ public protocol TupleElement: Sendable {
     static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Self
 }
 
+// TODO: Make it a TypedTuple so that we don't have to typecast manually.
 public struct Tuple: Sendable {
     private let elements: [any TupleElement]
 
@@ -122,12 +123,12 @@ public struct Tuple: Sendable {
     }
 }
 
-public struct TupleNil: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+struct TupleNil: TupleElement {
+    func encodeTuple() -> Fdb.Bytes {
         return [TupleTypeCode.null.rawValue]
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> TupleNil {
+    static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> TupleNil {
         return TupleNil()
     }
 }

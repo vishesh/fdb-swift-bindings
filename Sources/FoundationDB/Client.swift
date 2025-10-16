@@ -34,11 +34,12 @@ import CFoundationDB
 /// let database = try FdbClient.openDatabase()
 /// ```
 // TODO: Remove hard-coded error codes.
-public class FdbClient {
+public final class FdbClient {
     /// FoundationDB API version constants.
+    /// TODO: Remove public
     public enum APIVersion {
         /// The current supported API version (710).
-        public static let current: Int32 = 710
+        public static let current: Int = 710
     }
 
     /// Initializes the FoundationDB client with the specified API version.
@@ -48,8 +49,7 @@ public class FdbClient {
     ///
     /// - Parameter version: The FoundationDB API version to use. Defaults to the current version.
     /// - Throws: `FdbError` if initialization fails.
-    @MainActor
-    public static func initialize(version: Int32 = APIVersion.current) async throws {
+    public static func initialize(version: Int = APIVersion.current) async throws {
         try FdbNetwork.shared.initialize(version: version)
     }
 
@@ -81,7 +81,6 @@ public class FdbClient {
     ///   - option: The network option to set.
     ///   - value: Optional byte array value for the option.
     /// - Throws: `FdbError` if the option cannot be set.
-    @MainActor
     public static func setNetworkOption(_ option: Fdb.NetworkOption, value: [UInt8]? = nil) throws {
         try FdbNetwork.shared.setNetworkOption(option, value: value)
     }
@@ -92,7 +91,6 @@ public class FdbClient {
     ///   - option: The network option to set.
     ///   - value: String value for the option.
     /// - Throws: `FdbError` if the option cannot be set.
-    @MainActor
     public static func setNetworkOption(_ option: Fdb.NetworkOption, value: String) throws {
         try FdbNetwork.shared.setNetworkOption(option, value: value)
     }
@@ -103,93 +101,83 @@ public class FdbClient {
     ///   - option: The network option to set.
     ///   - value: Integer value for the option.
     /// - Throws: `FdbError` if the option cannot be set.
-    @MainActor
     public static func setNetworkOption(_ option: Fdb.NetworkOption, value: Int) throws {
         try FdbNetwork.shared.setNetworkOption(option, value: value)
     }
 
-    // MARK: - Convenience methods for common network options
+    // // MARK: - Convenience methods for common network options
 
-    /// Enables tracing and sets the trace directory.
-    ///
-    /// - Parameter directory: The directory where trace files will be written.
-    /// - Throws: `FdbError` if tracing cannot be enabled.
-    @MainActor
-    public static func enableTrace(directory: String) throws {
-        try setNetworkOption(.traceEnable, value: directory)
-    }
+    // /// Enables tracing and sets the trace directory.
+    // ///
+    // /// - Parameter directory: The directory where trace files will be written.
+    // /// - Throws: `FdbError` if tracing cannot be enabled.
+    // public static func enableTrace(directory: String) throws {
+    //     try setNetworkOption(.traceEnable, value: directory)
+    // }
 
-    /// Sets the maximum size of trace files before they are rolled over.
-    ///
-    /// - Parameter sizeInBytes: The maximum size in bytes for trace files.
-    /// - Throws: `FdbError` if the trace roll size cannot be set.
-    @MainActor
-    public static func setTraceRollSize(_ sizeInBytes: Int) throws {
-        try setNetworkOption(.traceRollSize, value: sizeInBytes)
-    }
+    // /// Sets the maximum size of trace files before they are rolled over.
+    // ///
+    // /// - Parameter sizeInBytes: The maximum size in bytes for trace files.
+    // /// - Throws: `FdbError` if the trace roll size cannot be set.
+    // public static func setTraceRollSize(_ sizeInBytes: Int) throws {
+    //     try setNetworkOption(.traceRollSize, value: sizeInBytes)
+    // }
 
-    /// Sets the trace log group identifier.
-    ///
-    /// - Parameter logGroup: The log group identifier for trace files.
-    /// - Throws: `FdbError` if the trace log group cannot be set.
-    @MainActor
-    public static func setTraceLogGroup(_ logGroup: String) throws {
-        try setNetworkOption(.traceLogGroup, value: logGroup)
-    }
+    // /// Sets the trace log group identifier.
+    // ///
+    // /// - Parameter logGroup: The log group identifier for trace files.
+    // /// - Throws: `FdbError` if the trace log group cannot be set.
+    // public static func setTraceLogGroup(_ logGroup: String) throws {
+    //     try setNetworkOption(.traceLogGroup, value: logGroup)
+    // }
 
-    /// Sets the format for trace output.
-    ///
-    /// - Parameter format: The trace format specification.
-    /// - Throws: `FdbError` if the trace format cannot be set.
-    @MainActor
-    public static func setTraceFormat(_ format: String) throws {
-        try setNetworkOption(.traceFormat, value: format)
-    }
+    // /// Sets the format for trace output.
+    // ///
+    // /// - Parameter format: The trace format specification.
+    // /// - Throws: `FdbError` if the trace format cannot be set.
+    // public static func setTraceFormat(_ format: String) throws {
+    //     try setNetworkOption(.traceFormat, value: format)
+    // }
 
-    /// Sets a FoundationDB configuration knob.
-    ///
-    /// Knobs are internal configuration parameters that can be used to tune
-    /// FoundationDB behavior.
-    ///
-    /// - Parameter knobSetting: The knob setting in "name=value" format.
-    /// - Throws: `FdbError` if the knob cannot be set.
-    @MainActor
-    public static func setKnob(_ knobSetting: String) throws {
-        try setNetworkOption(.knob, value: knobSetting)
-    }
+    // /// Sets a FoundationDB configuration knob.
+    // ///
+    // /// Knobs are internal configuration parameters that can be used to tune
+    // /// FoundationDB behavior.
+    // ///
+    // /// - Parameter knobSetting: The knob setting in "name=value" format.
+    // /// - Throws: `FdbError` if the knob cannot be set.
+    // public static func setKnob(_ knobSetting: String) throws {
+    //     try setNetworkOption(.knob, value: knobSetting)
+    // }
 
-    /// Sets the path to the TLS certificate file.
-    ///
-    /// - Parameter path: The file path to the TLS certificate.
-    /// - Throws: `FdbError` if the TLS certificate path cannot be set.
-    @MainActor
-    public static func setTLSCertPath(_ path: String) throws {
-        try setNetworkOption(.tlsCertPath, value: path)
-    }
+    // /// Sets the path to the TLS certificate file.
+    // ///
+    // /// - Parameter path: The file path to the TLS certificate.
+    // /// - Throws: `FdbError` if the TLS certificate path cannot be set.
+    // public static func setTLSCertPath(_ path: String) throws {
+    //     try setNetworkOption(.tlsCertPath, value: path)
+    // }
 
-    /// Sets the path to the TLS private key file.
-    ///
-    /// - Parameter path: The file path to the TLS private key.
-    /// - Throws: `FdbError` if the TLS key path cannot be set.
-    @MainActor
-    public static func setTLSKeyPath(_ path: String) throws {
-        try setNetworkOption(.tlsKeyPath, value: path)
-    }
+    // /// Sets the path to the TLS private key file.
+    // ///
+    // /// - Parameter path: The file path to the TLS private key.
+    // /// - Throws: `FdbError` if the TLS key path cannot be set.
+    // public static func setTLSKeyPath(_ path: String) throws {
+    //     try setNetworkOption(.tlsKeyPath, value: path)
+    // }
 
-    /// Sets the temporary directory for client operations.
-    ///
-    /// - Parameter path: The directory path for temporary files.
-    /// - Throws: `FdbError` if the temporary directory cannot be set.
-    @MainActor
-    public static func setClientTempDirectory(_ path: String) throws {
-        try setNetworkOption(.clientTmpDir, value: path)
-    }
+    // /// Sets the temporary directory for client operations.
+    // ///
+    // /// - Parameter path: The directory path for temporary files.
+    // /// - Throws: `FdbError` if the temporary directory cannot be set.
+    // public static func setClientTempDirectory(_ path: String) throws {
+    //     try setNetworkOption(.clientTmpDir, value: path)
+    // }
 
-    /// Disables client statistics logging.
-    ///
-    /// - Throws: `FdbError` if client statistics logging cannot be disabled.
-    @MainActor
-    public static func disableClientStatisticsLogging() throws {
-        try setNetworkOption(.disableClientStatisticsLogging, value: nil as [UInt8]?)
-    }
+    // /// Disables client statistics logging.
+    // ///
+    // /// - Throws: `FdbError` if client statistics logging cannot be disabled.
+    // public static func disableClientStatisticsLogging() throws {
+    //     try setNetworkOption(.disableClientStatisticsLogging, value: nil as [UInt8]?)
+    // }
 }
