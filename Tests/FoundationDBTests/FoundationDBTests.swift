@@ -22,6 +22,16 @@ import Testing
 
 @testable import FoundationDB
 
+extension FdbClient {
+    static func maybeInitialize() async throws {
+        if Self.isInitialized {
+            return
+        }
+
+        try await Self.initialize()
+    }
+}
+
 // Helper extension for Foundation-free string operations
 extension String {
     init(bytes: [UInt8]) {
@@ -101,7 +111,7 @@ extension Fdb.KeySelector {
 
 @Test("getValue test")
 func testGetValue() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -120,7 +130,7 @@ func testGetValue() async throws {
 
 @Test("setValue with byte arrays")
 func setValueBytes() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -140,7 +150,7 @@ func setValueBytes() async throws {
 
 @Test("setValue with strings")
 func setValueStrings() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -160,7 +170,7 @@ func setValueStrings() async throws {
 
 @Test("clear with byte arrays")
 func clearBytes() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -183,7 +193,7 @@ func clearBytes() async throws {
 
 @Test("clear with strings")
 func clearStrings() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -207,7 +217,7 @@ func clearStrings() async throws {
 
 @Test("clearRange with byte arrays")
 func clearRangeBytes() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -247,7 +257,7 @@ func clearRangeBytes() async throws {
 
 @Test("clearRange with strings")
 func clearRangeStrings() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -288,7 +298,7 @@ func clearRangeStrings() async throws {
 
 @Test("getKey with KeySelector")
 func getKeyWithKeySelector() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -313,7 +323,7 @@ func getKeyWithKeySelector() async throws {
 
 @Test("getKey with different KeySelector methods")
 func getKeyWithDifferentSelectors() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -354,7 +364,7 @@ func getKeyWithDifferentSelectors() async throws {
 
 @Test("getKey with Selectable protocol")
 func getKeyWithSelectable() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -382,7 +392,7 @@ func getKeyWithSelectable() async throws {
 
 @Test("commit transaction")
 func testCommit() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -406,7 +416,7 @@ func testCommit() async throws {
 
 // @Test("getVersionstamp")
 // func testGetVersionstamp() async throws {
-//     try await FdbClient.initialize()
+//     try await FdbClient.maybeInitialize()
 //     let database = try FdbClient.openDatabase()
 //     let transaction = try database.createTransaction()
 
@@ -423,7 +433,7 @@ func testCommit() async throws {
 
 @Test("cancel transaction")
 func testCancel() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -447,7 +457,7 @@ func testCancel() async throws {
 
 @Test("setReadVersion and getReadVersion")
 func readVersion() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -464,7 +474,7 @@ func readVersion() async throws {
 
 @Test("read version with snapshot read")
 func readVersionSnapshot() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -485,7 +495,7 @@ func readVersionSnapshot() async throws {
 
 @Test("getRange with byte arrays")
 func getRangeBytes() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -528,7 +538,7 @@ func getRangeBytes() async throws {
 
 @Test("getRange with limit")
 func getRangeWithLimit() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -571,7 +581,7 @@ func getRangeWithLimit() async throws {
 
 @Test("getRange empty range")
 func getRangeEmpty() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -592,7 +602,7 @@ func getRangeEmpty() async throws {
 
 @Test("getRange with KeySelectors - firstGreaterOrEqual")
 func getRangeWithKeySelectors() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -637,7 +647,7 @@ func getRangeWithKeySelectors() async throws {
 
 @Test("getRange with KeySelectors - String keys")
 func getRangeWithStringSelectorKeys() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -674,7 +684,7 @@ func getRangeWithStringSelectorKeys() async throws {
 
 @Test("getRange with Selectable protocol - mixed types")
 func getRangeWithSelectable() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -705,7 +715,7 @@ func getRangeWithSelectable() async throws {
 
 @Test("KeySelector static methods with different offsets")
 func keySelectorMethods() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -746,7 +756,7 @@ func keySelectorMethods() async throws {
 
 @Test("withTransaction success")
 func withTransactionSuccess() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range first
@@ -771,7 +781,7 @@ func withTransactionSuccess() async throws {
 
 @Test("withTransaction with exception in operation")
 func withTransactionException() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range first
@@ -802,7 +812,7 @@ func withTransactionException() async throws {
 
 @Test("withTransaction with non-retryable error")
 func withTransactionNonRetryableError() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range first
@@ -830,7 +840,7 @@ func withTransactionNonRetryableError() async throws {
 
 @Test("withTransaction returns value from operation")
 func withTransactionReturnValue() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range first
@@ -860,7 +870,7 @@ func withTransactionReturnValue() async throws {
 
 @Test("withTransaction Sendable compliance")
 func withTransactionSendable() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range first
@@ -917,7 +927,7 @@ func fdbErrorRetryable() {
 
 @Test("atomic operation ADD")
 func atomicOpAdd() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -949,7 +959,7 @@ func atomicOpAdd() async throws {
 
 @Test("atomic operation BIT_AND")
 func atomicOpBitAnd() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -980,7 +990,7 @@ func atomicOpBitAnd() async throws {
 
 @Test("atomic operation BIT_OR")
 func atomicOpBitOr() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1011,7 +1021,7 @@ func atomicOpBitOr() async throws {
 
 @Test("atomic operation BIT_XOR")
 func atomicOpBitXor() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1042,7 +1052,7 @@ func atomicOpBitXor() async throws {
 
 @Test("atomic operation MAX")
 func atomicOpMax() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1074,7 +1084,7 @@ func atomicOpMax() async throws {
 
 @Test("atomic operation MIN")
 func atomicOpMin() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1106,7 +1116,7 @@ func atomicOpMin() async throws {
 
 @Test("atomic operation APPEND_IF_FITS")
 func atomicOpAppendIfFits() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1138,7 +1148,7 @@ func atomicOpAppendIfFits() async throws {
 
 @Test("atomic operation BYTE_MIN")
 func atomicOpByteMin() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1170,7 +1180,7 @@ func atomicOpByteMin() async throws {
 
 @Test("atomic operation BYTE_MAX")
 func atomicOpByteMax() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1245,7 +1255,7 @@ func networkOptionConvenienceMethods() throws {
 
 @Test("transaction option with timeout enforcement")
 func transactionTimeoutOption() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1274,7 +1284,7 @@ func transactionTimeoutOption() async throws {
 
 @Test("transaction option with size limit")
 func transactionSizeLimitOption() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1349,7 +1359,7 @@ func transactionOptionConvenienceMethods() throws {
 
 @Test("readRange with KeySelectors - basic functionality")
 func readRangeWithKeySelectors() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1399,7 +1409,7 @@ func readRangeWithKeySelectors() async throws {
 
 @Test("readRange with AsyncIterator - comprehensive pre-fetching test")
 func readRangeAsyncIteratorPrefetch() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1462,7 +1472,7 @@ extension String {
 
 @Test("getEstimatedRangeSizeBytes returns size estimate")
 func testGetEstimatedRangeSizeBytes() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Write some test data
@@ -1488,7 +1498,7 @@ func testGetEstimatedRangeSizeBytes() async throws {
 
 @Test("getRangeSplitPoints returns split keys")
 func testGetRangeSplitPoints() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Write some test data
@@ -1520,7 +1530,7 @@ func testGetRangeSplitPoints() async throws {
 
 @Test("getCommittedVersion returns version after commit")
 func testGetCommittedVersion() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1533,7 +1543,7 @@ func testGetCommittedVersion() async throws {
 
 @Test("getCommittedVersion returns -1 for read-only transaction")
 func testGetCommittedVersionReadOnly() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1547,7 +1557,7 @@ func testGetCommittedVersionReadOnly() async throws {
 
 @Test("getApproximateSize returns transaction size")
 func testGetApproximateSize() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
     let transaction = try database.createTransaction()
 
@@ -1569,7 +1579,7 @@ func testGetApproximateSize() async throws {
 
 @Test("addConflictRange read conflict")
 func testAddReadConflictRange() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range
@@ -1597,7 +1607,7 @@ func testAddReadConflictRange() async throws {
 
 @Test("addConflictRange write conflict")
 func testAddWriteConflictRange() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range
@@ -1620,7 +1630,7 @@ func testAddWriteConflictRange() async throws {
 
 @Test("addConflictRange detects concurrent write conflicts")
 func testConflictRangeDetectsConcurrentWrites() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range
@@ -1658,7 +1668,7 @@ func testConflictRangeDetectsConcurrentWrites() async throws {
 
 @Test("addConflictRange multiple ranges")
 func testAddMultipleConflictRanges() async throws {
-    try await FdbClient.initialize()
+    try await FdbClient.maybeInitialize()
     let database = try FdbClient.openDatabase()
 
     // Clear test key range
