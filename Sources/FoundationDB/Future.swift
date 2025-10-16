@@ -154,7 +154,7 @@ struct ResultVersion: FutureResult {
     /// - Returns: A `ResultVersion` with the extracted version.
     /// - Throws: `FdbError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
-        var version: Int64 = 0
+        var version: Fdb.Version = 0
         let err = fdb_future_get_int64(fromFuture, &version)
         if err != 0 {
             throw FdbError(code: err)

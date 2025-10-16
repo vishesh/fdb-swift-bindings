@@ -229,7 +229,7 @@ class StackMachine {
             let transaction = try currentTransaction()
 
             // Create FdbError from the error code
-            let error = FdbError(code: Int32(errorCode))
+            let error = FdbError(code: Int(errorCode))
 
             // Call onError which will wait and handle the error appropriately
             do {
@@ -312,7 +312,7 @@ class StackMachine {
         case "GET_KEY":
             // Python order: key, or_equal, offset, prefix = inst.pop(4)
             let prefix = waitAndPop().item as! [UInt8]
-            let offset = Int32(waitAndPop().item as! Int64)
+            let offset = Int(waitAndPop().item as! Int64)
             let orEqual = (waitAndPop().item as! Int64) != 0
             let key = waitAndPop().item as! [UInt8]
 
@@ -331,7 +331,7 @@ class StackMachine {
             // Go pops: mode, reverse, limit, endKey, beginKey
             let mode = waitAndPop().item as! Int64 // Streaming mode, ignore for now
             let reverse = (waitAndPop().item as! Int64) != 0
-            let limit = Int32(waitAndPop().item as! Int64)
+            let limit = Int(waitAndPop().item as! Int64)
             let endKey = waitAndPop().item as! [UInt8]
             let beginKey = waitAndPop().item as! [UInt8]
             let transaction = try currentTransaction()
@@ -350,7 +350,7 @@ class StackMachine {
             // Go order: same but pops in reverse
             let mode = waitAndPop().item as! Int64 // Streaming mode, ignore for now
             let reverse = (waitAndPop().item as! Int64) != 0
-            let limit = Int32(waitAndPop().item as! Int64)
+            let limit = Int(waitAndPop().item as! Int64)
             let prefix = waitAndPop().item as! [UInt8]
             let transaction = try currentTransaction()
 
@@ -372,11 +372,11 @@ class StackMachine {
             let prefix = waitAndPop().item as! [UInt8]
             let mode = waitAndPop().item as! Int64 // Streaming mode, ignore for now
             let reverse = (waitAndPop().item as! Int64) != 0
-            let limit = Int32(waitAndPop().item as! Int64)
-            let endOffset = Int32(waitAndPop().item as! Int64)
+            let limit = Int(waitAndPop().item as! Int64)
+            let endOffset = Int(waitAndPop().item as! Int64)
             let endOrEqual = (waitAndPop().item as! Int64) != 0
             let endKey = waitAndPop().item as! [UInt8]
-            let beginOffset = Int32(waitAndPop().item as! Int64)
+            let beginOffset = Int(waitAndPop().item as! Int64)
             let beginOrEqual = (waitAndPop().item as! Int64) != 0
             let beginKey = waitAndPop().item as! [UInt8]
 

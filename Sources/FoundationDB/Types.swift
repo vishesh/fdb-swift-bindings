@@ -68,13 +68,13 @@ public enum Fdb {
     /// // Select the last key < "zebra"
     /// let selector = Fdb.KeySelector.lastLessThan("zebra")
     /// ```
-    public struct KeySelector: Selectable, @unchecked Sendable {
+    public struct KeySelector: Selectable, Sendable {
         /// The reference key for this selector.
         public let key: Key
         /// Whether to include the reference key itself in selection.
         public let orEqual: Bool
         /// Offset from the selected key position.
-        public let offset: Int32
+        public let offset: Int
 
         /// Creates a new key selector.
         ///
@@ -82,7 +82,7 @@ public enum Fdb {
         ///   - key: The reference key.
         ///   - orEqual: Whether to include the reference key itself.
         ///   - offset: Offset from the selected position.
-        public init(key: Key, orEqual: Bool, offset: Int32) {
+        public init(key: Key, orEqual: Bool, offset: Int) {
             self.key = key
             self.orEqual = orEqual
             self.offset = offset
@@ -105,32 +105,12 @@ public enum Fdb {
             return KeySelector(key: key, orEqual: false, offset: 1)
         }
 
-        /// Creates a key selector for the first key greater than or equal to the given string.
-        ///
-        /// Convenience method that converts the string to UTF-8 bytes.
-        ///
-        /// - Parameter key: The reference key as a string.
-        /// - Returns: A key selector that selects the first key >= the reference key.
-        public static func firstGreaterOrEqual(_ key: String) -> KeySelector {
-            return KeySelector(key: [UInt8](key.utf8), orEqual: false, offset: 1)
-        }
-
         /// Creates a key selector for the first key greater than the given key.
         ///
         /// - Parameter key: The reference key as a byte array.
         /// - Returns: A key selector that selects the first key > the reference key.
         public static func firstGreaterThan(_ key: Key) -> KeySelector {
             return KeySelector(key: key, orEqual: true, offset: 1)
-        }
-
-        /// Creates a key selector for the first key greater than the given string.
-        ///
-        /// Convenience method that converts the string to UTF-8 bytes.
-        ///
-        /// - Parameter key: The reference key as a string.
-        /// - Returns: A key selector that selects the first key > the reference key.
-        public static func firstGreaterThan(_ key: String) -> KeySelector {
-            return KeySelector(key: [UInt8](key.utf8), orEqual: true, offset: 1)
         }
 
         /// Creates a key selector for the last key less than or equal to the given key.
@@ -141,32 +121,12 @@ public enum Fdb {
             return KeySelector(key: key, orEqual: true, offset: 0)
         }
 
-        /// Creates a key selector for the last key less than or equal to the given string.
-        ///
-        /// Convenience method that converts the string to UTF-8 bytes.
-        ///
-        /// - Parameter key: The reference key as a string.
-        /// - Returns: A key selector that selects the last key <= the reference key.
-        public static func lastLessOrEqual(_ key: String) -> KeySelector {
-            return KeySelector(key: [UInt8](key.utf8), orEqual: true, offset: 0)
-        }
-
         /// Creates a key selector for the last key less than the given key.
         ///
         /// - Parameter key: The reference key as a byte array.
         /// - Returns: A key selector that selects the last key < the reference key.
         public static func lastLessThan(_ key: Key) -> KeySelector {
             return KeySelector(key: key, orEqual: false, offset: 0)
-        }
-
-        /// Creates a key selector for the last key less than the given string.
-        ///
-        /// Convenience method that converts the string to UTF-8 bytes.
-        ///
-        /// - Parameter key: The reference key as a string.
-        /// - Returns: A key selector that selects the last key < the reference key.
-        public static func lastLessThan(_ key: String) -> KeySelector {
-            return KeySelector(key: [UInt8](key.utf8), orEqual: false, offset: 0)
         }
     }
 }

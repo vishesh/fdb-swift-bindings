@@ -20,7 +20,7 @@
 import CFoundationDB
 
 // TODO: These should be auto-generated like other bindings
-public enum FdbErrorCode: Int32, CaseIterable {
+enum FdbErrorCode: Int32, CaseIterable {
     case notCommitted = 1007
     case transactionTooOld = 1020
     case futureVersion = 1021
@@ -37,11 +37,15 @@ public enum FdbErrorCode: Int32, CaseIterable {
 public struct FdbError: Error, CustomStringConvertible {
     public let code: Int32
 
-    public init(code: Int32) {
+    public init(code: Int) {
+        self.code = Int32(code)
+    }
+    
+    init(code: Int32) {
         self.code = code
     }
 
-    public init(_ errorCode: FdbErrorCode) {
+    init(_ errorCode: FdbErrorCode) {
         code = errorCode.rawValue
     }
 

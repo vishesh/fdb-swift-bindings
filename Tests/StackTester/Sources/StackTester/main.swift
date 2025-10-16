@@ -31,7 +31,7 @@ let prefix = Array(CommandLine.arguments[1].utf8)
 let apiVersionString = CommandLine.arguments[2]
 let clusterFile = CommandLine.arguments.count > 3 ? CommandLine.arguments[3] : nil
 
-guard let apiVersion = Int32(apiVersionString) else {
+guard let apiVersion = Int(apiVersionString) else {
     print("Invalid API version: \(apiVersionString)")
     exit(1)
 }

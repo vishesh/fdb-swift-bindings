@@ -22,7 +22,7 @@
 
 public extension Fdb {
     /** A set of options that can be set globally for the FoundationDB API. */
-    enum NetworkOption: UInt32, @unchecked Sendable {
+    enum NetworkOption: UInt32, Sendable {
         @available(*, deprecated)
         public static let localAddress = Self(rawValue: 10)
 
@@ -173,7 +173,7 @@ public extension Fdb {
     }
 
     /** A set of options that can be set on a database. */
-    enum DatabaseOption: UInt32, @unchecked Sendable {
+    enum DatabaseOption: UInt32, Sendable {
         /** Set the size of the client location cache. Raising this value can boost performance in very large databases where clients access data in a near-random pattern. Defaults to 100000. */
         case locationCacheSize = 10
 
@@ -233,7 +233,7 @@ public extension Fdb {
     }
 
     /** A set of options that can be set on a transaction. */
-    enum TransactionOption: UInt32, @unchecked Sendable {
+    enum TransactionOption: UInt32, Sendable {
         /** The transaction, if not self-conflicting, may be committed a second time after commit succeeds, in the event of a fault */
         case causalWriteRisky = 10
 
@@ -401,7 +401,7 @@ public extension Fdb {
     }
 
     /** Options that control the way the binding performs range reads. */
-    enum StreamingMode: Int32, @unchecked Sendable {
+    enum StreamingMode: Int32, Sendable {
         /** Client intends to consume the entire range and would like it all transferred as early as possible. */
         case wantAll = -2
 
@@ -425,7 +425,7 @@ public extension Fdb {
     }
 
     /** A set of operations that can be performed atomically on a database. */
-    enum MutationType: UInt32, @unchecked Sendable {
+    enum MutationType: UInt32, Sendable {
         /** Performs an addition of little-endian integers. If the existing value in the database is not present or shorter than ``param``, it is first extended to the length of ``param`` with zero bytes.  If ``param`` is shorter than the existing value in the database, the existing value is truncated to match the length of ``param``. The integers to be added must be stored in a little-endian representation.  They can be signed in two's complement representation or unsigned. You can add to an integer at a known offset in the value by prepending the appropriate number of zero bytes to ``param`` and padding with zero bytes to match the length of the value. However, this offset technique requires that you know the addition will not cause the integer field within the value to overflow. */
         case add = 2
 
@@ -473,7 +473,7 @@ public extension Fdb {
     }
 
     /** Conflict range types used internally by the C API. */
-    public enum ConflictRangeType: UInt32, @unchecked Sendable {
+    enum ConflictRangeType: UInt32, Sendable {
         /** Used to add a read conflict range */
         case read = 0
 
@@ -482,7 +482,7 @@ public extension Fdb {
     }
 
     /** Error code predicates for binding writers and non-standard layer implementers. */
-    enum ErrorPredicate: UInt32, @unchecked Sendable {
+    enum ErrorPredicate: UInt32, Sendable {
         /** Returns ``true`` if the error indicates the operations in the transactions should be retried because of transient error. */
         case retryable = 50000
 
