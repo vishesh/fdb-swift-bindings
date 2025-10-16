@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Synchronization
 import CFoundationDB
 
 #if canImport(Darwin)
@@ -41,7 +42,7 @@ final class FdbNetwork: Sendable {
     static let shared = FdbNetwork()
 
     /// The pthread handle for the network thread.
-    private nonisolated(unsafe) var networkThread: pthread_t? = nil
+    private let networkThread = Mutex<pthread_t?>(nil)
 
     /// Initializes the FoundationDB network with the specified API version.
     ///
@@ -51,35 +52,40 @@ final class FdbNetwork: Sendable {
     /// - Parameter version: The FoundationDB API version to use.
     /// - Throws: `FdbError` if any step of initialization fails.
     func initialize(version: Int) throws {
-        if networkThread == nil {
-            // throw FdbError(code: 2201)
-            return
-        }
+        try networkThread.withLock { networkThread in
+            if networkThread != nil {
+                throw FdbError(.networkError)
+            }
 
-        try selectAPIVersion(Int32(version))
-        try setupNetwork()
-        startNetwork()
+            try selectAPIVersion(Int32(version))
+            try setupNetwork()
+            networkThread = try startNetwork()
+        }
     }
 
     /// Stops the FoundationDB network and waits for the network thread to complete.
     deinit {
-        if networkThread == nil {
-            return
-        }
+        try networkThread.withLock { networkThread in
+            if networkThread == nil {
+                return networkThread
+            }
 
-        // Call stop_network and wait for network thread to complete
-        let error = fdb_stop_network()
-        if error != 0 {
-            print("Failed to stop network in deinit: \(FdbError(code: error).description)")
-        }
+            // Call stop_network and wait for network thread to complete
+            let error = fdb_stop_network()
+            if error != 0 {
+                fatalError("Failed to stop network in deinit: \(FdbError(code: error).description)")
+            }
 
-        if let thread = networkThread {
-            pthread_join(thread, nil)
+            if let thread = networkThread {
+                pthread_join(thread, nil)
+            }
+
+            return nil
         }
     }
 
-    /// Returns true is FDB network is initialized.
-    var isInitialized: Bool { networkThread != nil }
+    /// Returns true if FDB network is initialized.
+    public var isInitialized: Bool { networkThread.withLock { $0 != nil } }
 
     /// Sets a network option with an optional byte array value.
     ///
@@ -126,7 +132,7 @@ final class FdbNetwork: Sendable {
         let valueBytes = withUnsafeBytes(of: Int64(value)) { [UInt8]($0) }
         try setNetworkOption(option, value: valueBytes)
     }
-    
+
     /// Selects the FoundationDB API version.
     ///
     /// - Parameter version: The API version to select.
@@ -142,12 +148,8 @@ final class FdbNetwork: Sendable {
     ///
     /// This method must be called before starting the network thread.
     ///
-    /// - Throws: `FdbError` if network setup fails or if already set up.X
+    /// - Throws: `FdbError` if network setup fails or if already set up.
     private func setupNetwork() throws {
-        guard networkThread == nil else {
-            throw FdbError(.networkError)
-        }
-
         let error = fdb_setup_network()
         if error != 0 {
             throw FdbError(code: error)
@@ -158,22 +160,20 @@ final class FdbNetwork: Sendable {
     ///
     /// Creates and starts a pthread that runs the FoundationDB network event loop.
     /// The network must be set up before calling this method.
-    private func startNetwork() {
-        guard networkThread != nil else {
-            fatalError("Network must be setup before starting thread network")
-        }
-
+    private func startNetwork() throws -> pthread_t? {
         var thread = pthread_t(bitPattern: 0)
         let result = pthread_create(&thread, nil, { _ in
             let error = fdb_run_network()
             if error != 0 {
-                print("Network thread error: \(FdbError(code: error).description)")
+                fatalError("Network thread error: \(FdbError(code: error).description)")
             }
             return nil
         }, nil)
 
-        if result == 0 {
-            networkThread = thread
+        if result != 0 {
+            throw FdbError(.networkError)
         }
+
+        return thread
     }
 }

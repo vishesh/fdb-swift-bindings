@@ -53,6 +53,9 @@ public final class FdbClient {
         try FdbNetwork.shared.initialize(version: version)
     }
 
+    /// Returns true if FDB network is initialized.
+    public static var isInitialized: Bool { FdbNetwork.shared.isInitialized }
+
     /// Opens a connection to a FoundationDB database.
     ///
     /// Creates and returns a database handle that can be used to create transactions
