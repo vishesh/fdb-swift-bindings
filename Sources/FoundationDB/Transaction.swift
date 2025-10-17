@@ -163,23 +163,23 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         ).getAsync()
     }
 
-    public func getEstimatedRangeSizeBytes(beginKey: Fdb.Key, endKey: Fdb.Key) async throws -> Int64 {
-        try await beginKey.withUnsafeBytes { beginKeyBytes in
-            endKey.withUnsafeBytes { endKeyBytes in
-                Future<ResultInt64>(
-                    fdb_transaction_get_estimated_range_size_bytes(
+    public func getEstimatedRangeSizeBytes(beginKey: Fdb.Key, endKey: Fdb.Key) async throws -> Int {
+        Int(try await beginKey.withUnsafeBytes { beginKeyBytes in
+                endKey.withUnsafeBytes { endKeyBytes in
+                    Future<ResultInt64>(
+                      fdb_transaction_get_estimated_range_size_bytes(
                         transaction,
                         beginKeyBytes.bindMemory(to: UInt8.self).baseAddress,
                         Int32(beginKey.count),
                         endKeyBytes.bindMemory(to: UInt8.self).baseAddress,
                         Int32(endKey.count)
+                      )
                     )
-                )
-            }
-        }.getAsync()?.value ?? 0
+                }
+            }.getAsync()?.value ?? 0)
     }
 
-    public func getRangeSplitPoints(beginKey: Fdb.Key, endKey: Fdb.Key, chunkSize: Int64) async throws -> [[UInt8]] {
+    public func getRangeSplitPoints(beginKey: Fdb.Key, endKey: Fdb.Key, chunkSize: Int) async throws -> [[UInt8]] {
         try await beginKey.withUnsafeBytes { beginKeyBytes in
             endKey.withUnsafeBytes { endKeyBytes in
                 Future<ResultKeyArray>(
@@ -189,7 +189,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
                         Int32(beginKey.count),
                         endKeyBytes.bindMemory(to: UInt8.self).baseAddress,
                         Int32(endKey.count),
-                        chunkSize
+                        Int64(chunkSize)
                     )
                 )
             }
@@ -205,10 +205,10 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         return version
     }
 
-    public func getApproximateSize() async throws -> Int64 {
-        try await Future<ResultInt64>(
+    public func getApproximateSize() async throws -> Int {
+        Int(try await Future<ResultInt64>(
             fdb_transaction_get_approximate_size(transaction)
-        ).getAsync()?.value ?? 0
+            ).getAsync()?.value ?? 0)
     }
 
     public func addConflictRange(beginKey: Fdb.Key, endKey: Fdb.Key, type: Fdb.ConflictRangeType) throws {
