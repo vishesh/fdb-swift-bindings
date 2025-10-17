@@ -402,7 +402,7 @@ class StackMachine {
             store(idx, Array("GOT_ESTIMATED_RANGE_SIZE".utf8))
 
         case "GET_RANGE_SPLIT_POINTS":
-            let chunkSize = waitAndPop().item as! Int64
+            let chunkSize = Int(waitAndPop().item as! Int64)
             let endKey = waitAndPop().item as! [UInt8]
             let beginKey = waitAndPop().item as! [UInt8]
             let transaction = try currentTransaction()

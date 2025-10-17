@@ -196,7 +196,7 @@ public protocol ITransaction: Sendable {
     ///   - endKey: The end of the range (exclusive).
     /// - Returns: The estimated size in bytes.
     /// - Throws: `FdbError` if the operation fails.
-    func getEstimatedRangeSizeBytes(beginKey: Fdb.Key, endKey: Fdb.Key) async throws -> Int64
+    func getEstimatedRangeSizeBytes(beginKey: Fdb.Key, endKey: Fdb.Key) async throws -> Int
 
     /// Returns a list of keys that can split the given range into roughly equal chunks.
     ///
@@ -208,7 +208,7 @@ public protocol ITransaction: Sendable {
     ///   - chunkSize: The desired size of each chunk in bytes.
     /// - Returns: An array of keys representing split points.
     /// - Throws: `FdbError` if the operation fails.
-    func getRangeSplitPoints(beginKey: Fdb.Key, endKey: Fdb.Key, chunkSize: Int64) async throws -> [[UInt8]]
+    func getRangeSplitPoints(beginKey: Fdb.Key, endKey: Fdb.Key, chunkSize: Int) async throws -> [[UInt8]]
 
     /// Returns the version number at which a committed transaction modified the database.
     ///
@@ -225,7 +225,7 @@ public protocol ITransaction: Sendable {
     ///
     /// - Returns: The approximate size in bytes.
     /// - Throws: `FdbError` if the operation fails.
-    func getApproximateSize() async throws -> Int64
+    func getApproximateSize() async throws -> Int
 
     /// Performs an atomic operation on a key.
     ///
