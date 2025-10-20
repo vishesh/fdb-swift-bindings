@@ -90,10 +90,10 @@ final class FDBNetwork: Sendable {
     /// Sets a network option with an optional byte array value.
     ///
     /// - Parameters:
-    ///   - option: The network option to set.
     ///   - value: Optional byte array value for the option.
+    ///   - option: The network option to set.
     /// - Throws: `FDBError` if the option cannot be set.
-    func setNetworkOption(_ option: FDB.NetworkOption, value: [UInt8]? = nil) throws {
+    func setNetworkOption(to value: [UInt8]? = nil, forOption option: FDB.NetworkOption) throws {
         let error: Int32
         if let value = value {
             error = value.withUnsafeBytes { bytes in
@@ -115,22 +115,22 @@ final class FDBNetwork: Sendable {
     /// Sets a network option with a string value.
     ///
     /// - Parameters:
-    ///   - option: The network option to set.
     ///   - value: String value for the option (automatically converted to UTF-8 bytes).
+    ///   - option: The network option to set.
     /// - Throws: `FDBError` if the option cannot be set.
-    func setNetworkOption(_ option: FDB.NetworkOption, value: String) throws {
-        try setNetworkOption(option, value: [UInt8](value.utf8))
+    func setNetworkOption(to value: String, forOption option: FDB.NetworkOption) throws {
+        try setNetworkOption(to: [UInt8](value.utf8), forOption: option)
     }
 
     /// Sets a network option with an integer value.
     ///
     /// - Parameters:
-    ///   - option: The network option to set.
     ///   - value: Integer value for the option (automatically converted to 64-bit bytes).
+    ///   - option: The network option to set.
     /// - Throws: `FDBError` if the option cannot be set.
-    func setNetworkOption(_ option: FDB.NetworkOption, value: Int) throws {
+    func setNetworkOption(to value: Int, forOption option: FDB.NetworkOption) throws {
         let valueBytes = withUnsafeBytes(of: Int64(value)) { [UInt8]($0) }
-        try setNetworkOption(option, value: valueBytes)
+        try setNetworkOption(to: valueBytes, forOption: option)
     }
 
     /// Selects the FoundationDB API version.
