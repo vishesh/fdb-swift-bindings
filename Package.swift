@@ -24,7 +24,7 @@ import PackageDescription
 let package = Package(
     name: "FoundationDB",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v14),
     ],
     products: [
         .library(name: "FoundationDB", targets: ["FoundationDB"]),
@@ -35,7 +35,7 @@ let package = Package(
         ),
         .target(
             name: "FoundationDB",
-            dependencies: ["CFoundationDB"],
+            dependencies: ["CFoundationDB"]
         ),
         .testTarget(
             name: "FoundationDBTests",

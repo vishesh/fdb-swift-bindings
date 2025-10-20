@@ -24,11 +24,11 @@ import Testing
 
 extension FDBClient {
     static func maybeInitialize() async throws {
-        if Self.isInitialized {
+        if isInitialized {
             return
         }
 
-        try await Self.initialize()
+        try await initialize()
     }
 }
 
@@ -49,9 +49,8 @@ extension TransactionProtocol {
     func getValue(for key: String, snapshot: Bool = false) async throws -> FDB.Value? {
         let keyBytes = [UInt8](key.utf8)
         return try await getValue(for: keyBytes, snapshot: snapshot)
-
     }
-    
+
     func setValue(_ value: String, for key: String) {
         let keyBytes = [UInt8](key.utf8)
         let valueBytes = [UInt8](value.utf8)
@@ -70,22 +69,22 @@ extension TransactionProtocol {
     }
 
     func readRange(
-      beginKey: String, endKey: String, snapshot: Bool = false
+        beginKey: String, endKey: String, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
         let endSelector = FDB.KeySelector.firstGreaterOrEqual(endKey)
         return readRange(
-          beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
+            beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
 
     func getRange(
-      beginKey: String, endKey: String, limit: Int = 0, snapshot: Bool = false
+        beginKey: String, endKey: String, limit: Int = 0, snapshot: Bool = false
     ) async throws -> ResultRange {
         let beginKeyBytes = [UInt8](beginKey.utf8)
         let endKeyBytes = [UInt8](endKey.utf8)
         return try await getRange(
-          beginKey: beginKeyBytes, endKey: endKeyBytes, limit: limit, snapshot: snapshot
+            beginKey: beginKeyBytes, endKey: endKeyBytes, limit: limit, snapshot: snapshot
         )
     }
 }
@@ -93,12 +92,11 @@ extension TransactionProtocol {
 extension FDB.KeySelector {
     static func firstGreaterOrEqual(_ key: String) -> Self {
         return Self(key: [UInt8](key.utf8), orEqual: false, offset: 1)
-    }    
+    }
 
     static func firstGreaterThan(_ key: String) -> Self {
         return Self(key: [UInt8](key.utf8), orEqual: true, offset: 1)
     }
-
 
     static func lastLessOrEqual(_ key: String) -> Self {
         return Self(key: [UInt8](key.utf8), orEqual: true, offset: 0)
@@ -1478,7 +1476,7 @@ func testGetEstimatedRangeSizeBytes() async throws {
     // Write some test data
     try await database.withTransaction { transaction in
         transaction.clearRange(beginKey: "test_size_", endKey: "test_size`")
-        for i in 0..<100 {
+        for i in 0 ..< 100 {
             let key = "test_size_\(String.padded(i))"
             let value = String(repeating: "x", count: 1000)
             transaction.setValue(value, for: key)
@@ -1504,7 +1502,7 @@ func testGetRangeSplitPoints() async throws {
     // Write some test data
     try await database.withTransaction { transaction in
         transaction.clearRange(beginKey: "test_split_", endKey: "test_split`")
-        for i in 0..<200 {
+        for i in 0 ..< 200 {
             let key = "test_split_\(String.padded(i))"
             let value = String(repeating: "y", count: 500)
             transaction.setValue(value, for: key)
@@ -1542,7 +1540,7 @@ func testGetCommittedVersion() async throws {
 }
 
 @Test("getCommittedVersion returns -1 for read-only transaction")
-func testGetCommittedVersionReadOnly() async throws {
+func getCommittedVersionReadOnly() async throws {
     try await FDBClient.maybeInitialize()
     let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
@@ -1566,7 +1564,7 @@ func testGetApproximateSize() async throws {
     #expect(initialSize >= 0, "Initial size should be non-negative")
 
     // Add some mutations
-    for i in 0..<10 {
+    for i in 0 ..< 10 {
         let key = "test_approx_\(i)"
         let value = String(repeating: "z", count: 100)
         transaction.setValue(value, for: key)
@@ -1578,7 +1576,7 @@ func testGetApproximateSize() async throws {
 }
 
 @Test("addConflictRange read conflict")
-func testAddReadConflictRange() async throws {
+func addReadConflictRange() async throws {
     try await FDBClient.maybeInitialize()
     let database = try FDBClient.openDatabase()
 
@@ -1606,7 +1604,7 @@ func testAddReadConflictRange() async throws {
 }
 
 @Test("addConflictRange write conflict")
-func testAddWriteConflictRange() async throws {
+func addWriteConflictRange() async throws {
     try await FDBClient.maybeInitialize()
     let database = try FDBClient.openDatabase()
 
@@ -1629,7 +1627,7 @@ func testAddWriteConflictRange() async throws {
 }
 
 @Test("addConflictRange detects concurrent write conflicts")
-func testConflictRangeDetectsConcurrentWrites() async throws {
+func conflictRangeDetectsConcurrentWrites() async throws {
     try await FDBClient.maybeInitialize()
     let database = try FDBClient.openDatabase()
 
@@ -1667,7 +1665,7 @@ func testConflictRangeDetectsConcurrentWrites() async throws {
 }
 
 @Test("addConflictRange multiple ranges")
-func testAddMultipleConflictRanges() async throws {
+func addMultipleConflictRanges() async throws {
     try await FDBClient.maybeInitialize()
     let database = try FDBClient.openDatabase()
 
@@ -1699,7 +1697,7 @@ func testAddMultipleConflictRanges() async throws {
 }
 
 @Test("ConflictRangeType enum values")
-func testConflictRangeTypeValues() {
+func conflictRangeTypeValues() {
     // Test that conflict range type enum has expected values
     #expect(FDB.ConflictRangeType.read.rawValue == 0, "read should have value 0")
     #expect(FDB.ConflictRangeType.write.rawValue == 1, "write should have value 1")

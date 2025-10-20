@@ -30,7 +30,7 @@ import CFoundationDB
 /// let database = try FDBClient.openDatabase()
 /// let transaction = try database.createTransaction()
 /// ```
-final public class FDBDatabase: DatabaseProtocol {
+public final class FDBDatabase: DatabaseProtocol {
     /// The underlying FoundationDB database pointer.
     private let database: OpaquePointer
 

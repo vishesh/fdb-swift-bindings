@@ -40,7 +40,7 @@ public struct FDBError: Error, CustomStringConvertible {
     public init(code: Int) {
         self.code = Int32(code)
     }
-    
+
     init(code: Int32) {
         self.code = code
     }
