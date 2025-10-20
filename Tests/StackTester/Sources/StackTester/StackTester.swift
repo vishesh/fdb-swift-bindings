@@ -180,7 +180,7 @@ class StackMachine {
 
         case "POP":
             assert(!stack.isEmpty)
-            let _ = waitAndPop()
+            _ = waitAndPop()
 
         case "DUP":
             assert(!stack.isEmpty)
@@ -240,7 +240,7 @@ class StackMachine {
                 // If onError fails, store the error (transaction should not be retried)
                 throw error
             }
- 
+
         case "GET_READ_VERSION":
             let transaction = try currentTransaction()
             lastVersion = try await transaction.getReadVersion()
@@ -261,7 +261,7 @@ class StackMachine {
             let key = waitAndPop().item as! [UInt8]
 
             let result = try await database.withTransaction { transaction in
-                return try await transaction.getValue(for: key, snapshot: false)
+                try await transaction.getValue(for: key, snapshot: false)
             }
 
             if let value = result {
@@ -430,8 +430,8 @@ class StackMachine {
 
         case "ATOMIC_OP":
             // Python order: opType, key, value = inst.pop(3)
-            let param = waitAndPop().item as! [UInt8]  // value/param
-            let key = waitAndPop().item as! [UInt8]    // key
+            let param = waitAndPop().item as! [UInt8] // value/param
+            let key = waitAndPop().item as! [UInt8] // key
             let opType = waitAndPop().item as! [UInt8] // opType
             let transaction = try currentTransaction()
 
@@ -513,7 +513,7 @@ class StackMachine {
             let numElements = waitAndPop().item as! Int64
             var elements: [any TupleElement] = []
 
-            for _ in 0..<numElements {
+            for _ in 0 ..< numElements {
                 let item = waitAndPop().item
                 if let bytes = item as? [UInt8] {
                     elements.append(bytes)
@@ -537,7 +537,7 @@ class StackMachine {
             let numElements = waitAndPop().item as! Int64
             var elements: [any TupleElement] = []
 
-            for _ in 0..<numElements {
+            for _ in 0 ..< numElements {
                 let item = waitAndPop().item
                 if let bytes = item as? [UInt8] {
                     elements.append(bytes)
@@ -580,7 +580,7 @@ class StackMachine {
             let numTuples = waitAndPop().item as! Int64
             var tuples: [[UInt8]] = []
 
-            for _ in 0..<numTuples {
+            for _ in 0 ..< numTuples {
                 tuples.append(waitAndPop().item as! [UInt8])
             }
 
@@ -594,7 +594,7 @@ class StackMachine {
             let numElements = waitAndPop().item as! Int64
             var elements: [any TupleElement] = []
 
-            for _ in 0..<numElements {
+            for _ in 0 ..< numElements {
                 let item = waitAndPop().item
                 if let bytes = item as? [UInt8] {
                     elements.append(bytes)
@@ -658,7 +658,7 @@ class StackMachine {
             // Wait until stack is empty - already satisfied since we process sequentially
             break
 
-        case "UNIT_TESTS": // TODO
+        case "UNIT_TESTS": // TODO:
             store(idx, Array("UNIT_TESTS_COMPLETED".utf8))
 
         default:
@@ -723,4 +723,3 @@ class StackMachine {
         print("StackTester completed successfully with \(instructions.count) instructions")
     }
 }
-

@@ -275,7 +275,7 @@ public protocol TransactionProtocol: Sendable {
 }
 
 /// Default implementation of transaction retry logic for `DatabaseProtocol`.
-public extension DatabaseProtocol {
+extension DatabaseProtocol {
     /// Default implementation of `withTransaction` with automatic retry logic.
     ///
     /// This implementation automatically retries transactions when they encounter
@@ -284,7 +284,7 @@ public extension DatabaseProtocol {
     /// - Parameter operation: The transaction operation to execute.
     /// - Returns: The result of the successful transaction.
     /// - Throws: `FDBError` if all retry attempts fail.
-    func withTransaction<T: Sendable>(
+    public func withTransaction<T: Sendable>(
         _ operation: (TransactionProtocol) async throws -> T
     ) async throws -> T {
         let maxRetries = 100 // TODO: Remove this.
@@ -317,20 +317,20 @@ public extension DatabaseProtocol {
     }
 }
 
-public extension TransactionProtocol {
-    func getValue(for key: FDB.Key, snapshot: Bool = false) async throws -> FDB.Value? {
+extension TransactionProtocol {
+ public func getValue(for key: FDB.Key, snapshot: Bool = false) async throws -> FDB.Value? {
         try await getValue(for: key, snapshot: snapshot)
     }
 
-    func getKey(selector: FDB.Selectable, snapshot: Bool = false) async throws -> FDB.Key? {
+ public func getKey(selector: FDB.Selectable, snapshot: Bool = false) async throws -> FDB.Key? {
         try await getKey(selector: selector.toKeySelector(), snapshot: snapshot)
     }
 
-    func getKey(selector: FDB.KeySelector, snapshot: Bool = false) async throws -> FDB.Key? {
+ public func getKey(selector: FDB.KeySelector, snapshot: Bool = false) async throws -> FDB.Key? {
         try await getKey(selector: selector, snapshot: snapshot)
     }
 
-    func readRange(
+ public func readRange(
         beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         FDB.AsyncKVSequence(
@@ -341,7 +341,7 @@ public extension TransactionProtocol {
         )
     }
 
-    func readRange(
+ public func readRange(
         beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector
     ) -> FDB.AsyncKVSequence {
         readRange(
@@ -349,7 +349,7 @@ public extension TransactionProtocol {
         )
     }
 
-    func readRange(
+ public func readRange(
         begin: FDB.Selectable, end: FDB.Selectable, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = begin.toKeySelector()
@@ -359,7 +359,7 @@ public extension TransactionProtocol {
         )
     }
 
-    func readRange(
+ public func readRange(
         beginKey: FDB.Key, endKey: FDB.Key, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
@@ -369,7 +369,7 @@ public extension TransactionProtocol {
         )
     }
 
-    func getRange(
+ public func getRange(
         begin: FDB.Selectable, end: FDB.Selectable, limit: Int = 0, snapshot: Bool = false
     ) async throws -> ResultRange {
         let beginSelector = begin.toKeySelector()
@@ -379,7 +379,7 @@ public extension TransactionProtocol {
         )
     }
 
-    func getRange(
+ public func getRange(
         beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, limit: Int = 0,
         snapshot: Bool = false
     ) async throws -> ResultRange {
@@ -388,103 +388,102 @@ public extension TransactionProtocol {
         )
     }
 
-    func getRange(
+ public func getRange(
         beginKey: FDB.Key, endKey: FDB.Key, limit: Int = 0, snapshot: Bool = false
     ) async throws -> ResultRange {
         try await getRange(beginKey: beginKey, endKey: endKey, limit: limit, snapshot: snapshot)
     }
 
-    func setOption(_ option: FDB.TransactionOption) throws {
+ public func setOption(_ option: FDB.TransactionOption) throws {
         try setOption(option, value: nil)
     }
 
-    func setOption(_ option: FDB.TransactionOption, value: String) throws {
+ public func setOption(_ option: FDB.TransactionOption, value: String) throws {
         let valueBytes = [UInt8](value.utf8)
         try setOption(option, value: valueBytes)
     }
 
-    func setOption(_ option: FDB.TransactionOption, value: Int) throws {
+ public func setOption(_ option: FDB.TransactionOption, value: Int) throws {
         let valueBytes = withUnsafeBytes(of: Int64(value)) { [UInt8]($0) }
         try setOption(option, value: valueBytes)
     }
 }
 
-public extension TransactionProtocol {
+extension TransactionProtocol {
     // MARK: - Convenience methods for common transaction options
-
-    func setTimeout(_ milliseconds: Int) throws {
+    public func setTimeout(_ milliseconds: Int) throws {
         try setOption(.timeout, value: milliseconds)
     }
 
-    func setRetryLimit(_ limit: Int) throws {
+    public func setRetryLimit(_ limit: Int) throws {
         try setOption(.retryLimit, value: limit)
     }
 
-    func setMaxRetryDelay(_ milliseconds: Int) throws {
+    public func setMaxRetryDelay(_ milliseconds: Int) throws {
         try setOption(.maxRetryDelay, value: milliseconds)
     }
 
-    func setSizeLimit(_ bytes: Int) throws {
+    public func setSizeLimit(_ bytes: Int) throws {
         try setOption(.sizeLimit, value: bytes)
     }
 
-    func setIdempotencyId(_ id: FDB.Value) throws {
+    public func setIdempotencyId(_ id: FDB.Value) throws {
         try setOption(.idempotencyId, value: id)
     }
 
-    func enableAutomaticIdempotency() throws {
+    public func enableAutomaticIdempotency() throws {
         try setOption(.automaticIdempotency)
     }
 
-    func disableReadYourWrites() throws {
+    public func disableReadYourWrites() throws {
         try setOption(.readYourWritesDisable)
     }
 
-    func enableSnapshotReadYourWrites() throws {
+    public func enableSnapshotReadYourWrites() throws {
         try setOption(.snapshotRywEnable)
     }
 
-    func disableSnapshotReadYourWrites() throws {
+    public func disableSnapshotReadYourWrites() throws {
         try setOption(.snapshotRywDisable)
     }
 
-    func setPriorityBatch() throws {
+    public func setPriorityBatch() throws {
         try setOption(.priorityBatch)
     }
 
-    func setPrioritySystemImmediate() throws {
+    public func setPrioritySystemImmediate() throws {
         try setOption(.prioritySystemImmediate)
     }
 
-    func enableCausalWriteRisky() throws {
+    public func enableCausalWriteRisky() throws {
         try setOption(.causalWriteRisky)
     }
 
-    func enableCausalReadRisky() throws {
+    public func enableCausalReadRisky() throws {
         try setOption(.causalReadRisky)
     }
 
-    func disableCausalRead() throws {
+    public func disableCausalRead() throws {
         try setOption(.causalReadDisable)
     }
 
-    func enableAccessSystemKeys() throws {
+    public func enableAccessSystemKeys() throws {
         try setOption(.accessSystemKeys)
     }
 
-    func enableReadSystemKeys() throws {
+    public func enableReadSystemKeys() throws {
         try setOption(.readSystemKeys)
     }
 
-    func enableRawAccess() throws {
+    public func enableRawAccess() throws {
         try setOption(.rawAccess)
     }
 
-    func setDebugTransactionIdentifier(_ identifier: String) throws {
+    public func setDebugTransactionIdentifier(_ identifier: String) throws {
         try setOption(.debugTransactionIdentifier, value: identifier)
     }
 
-    func enableLogTransaction() throws {
+    public func enableLogTransaction() throws {
         try setOption(.logTransaction)
     }
 }

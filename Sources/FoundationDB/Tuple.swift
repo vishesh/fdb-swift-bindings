@@ -61,7 +61,7 @@ public struct Tuple: Sendable {
     }
 
     public subscript(index: Int) -> (any TupleElement)? {
-        guard index >= 0 && index < elements.count else { return nil }
+        guard index >= 0, index < elements.count else { return nil }
         return elements[index]
     }
 
@@ -108,7 +108,7 @@ public struct Tuple: Sendable {
                 elements.append(element)
             case TupleTypeCode.intZero.rawValue:
                 elements.append(0)
-            case TupleTypeCode.negativeIntStart.rawValue...TupleTypeCode.positiveIntEnd.rawValue:
+            case TupleTypeCode.negativeIntStart.rawValue ... TupleTypeCode.positiveIntEnd.rawValue:
                 let element = try Int64.decodeTuple(from: bytes, at: &offset)
                 elements.append(element)
             case TupleTypeCode.nested.rawValue:
@@ -128,7 +128,7 @@ struct TupleNil: TupleElement {
         return [TupleTypeCode.null.rawValue]
     }
 
-    static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> TupleNil {
+    static func decodeTuple(from _: FDB.Bytes, at _: inout Int) throws -> TupleNil {
         return TupleNil()
     }
 }
@@ -136,7 +136,7 @@ struct TupleNil: TupleElement {
 extension String: TupleElement {
     public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.string.rawValue]
-        let utf8Bytes = Array(self.utf8)
+        let utf8Bytes = Array(utf8)
 
         for byte in utf8Bytes {
             if byte == 0x00 {
@@ -186,8 +186,7 @@ extension FDB.Bytes: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> FDB.Bytes
-    {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> FDB.Bytes {
         var decoded = FDB.Bytes()
 
         while offset < bytes.count {
@@ -246,7 +245,7 @@ extension Float: TupleElement {
             throw TupleError.invalidDecoding("Not enough bytes for Float")
         }
 
-        let floatBytes = Array(bytes[offset..<offset + 4])
+        let floatBytes = Array(bytes[offset ..< offset + 4])
         offset += 4
 
         let bigEndianValue = floatBytes.withUnsafeBytes { bytes in
@@ -271,7 +270,7 @@ extension Double: TupleElement {
             throw TupleError.invalidDecoding("Not enough bytes for Double")
         }
 
-        let doubleBytes = Array(bytes[offset..<offset + 8])
+        let doubleBytes = Array(bytes[offset ..< offset + 8])
         offset += 8
 
         let bigEndianValue = doubleBytes.withUnsafeBytes { bytes in
@@ -285,7 +284,7 @@ extension Double: TupleElement {
 extension UUID: TupleElement {
     public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.uuid.rawValue]
-        let (u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16) = self.uuid
+        let (u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16) = uuid
         encoded.append(contentsOf: [
             u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16,
         ])
@@ -297,7 +296,7 @@ extension UUID: TupleElement {
             throw TupleError.invalidDecoding("Not enough bytes for UUID")
         }
 
-        let uuidBytes = Array(bytes[offset..<offset + 16])
+        let uuidBytes = Array(bytes[offset ..< offset + 16])
         offset += 16
 
         let uuidTuple = (
@@ -320,7 +319,7 @@ private let sizeLimits: [UInt64] = [
     (1 << (5 * 8)) - 1,
     (1 << (6 * 8)) - 1,
     (1 << (7 * 8)) - 1,
-    UInt64.max,  // (1 << (8 * 8)) - 1 would overflow, so use UInt64.max instead
+    UInt64.max, // (1 << (8 * 8)) - 1 would overflow, so use UInt64.max instead
 ]
 
 private func bisectLeft(_ value: UInt64) -> Int {
@@ -387,7 +386,7 @@ extension Int64: TupleElement {
         }
 
         var bp = [UInt8](repeating: 0, count: 8)
-        bp.replaceSubrange((8 - n)..<8, with: bytes[offset...(offset+n-1)])
+        bp.replaceSubrange((8 - n) ..< 8, with: bytes[offset ... (offset + n - 1)])
         offset += n
 
         var ret: Int64 = 0
@@ -396,11 +395,11 @@ extension Int64: TupleElement {
         }
 
         if neg {
-             if n == 8 {
-                 return ret
-             } else {
-                 return ret - Int64(sizeLimits[n])
-             }
+            if n == 8 {
+                return ret
+            } else {
+                return ret - Int64(sizeLimits[n])
+            }
         }
 
         if ret > 0 {

@@ -39,7 +39,7 @@ guard let apiVersion = Int(apiVersionString) else {
 // Use a serial queue for thread-safe communication
 let syncQueue = DispatchQueue(label: "stacktester.sync")
 var finished = false
-var finalError: Error? = nil
+var finalError: Error?
 
 Task {
     do {

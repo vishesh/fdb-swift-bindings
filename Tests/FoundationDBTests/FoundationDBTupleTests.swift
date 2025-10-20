@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 
-import Testing
 import Foundation
+import Testing
 
 @testable import FoundationDB
 
@@ -36,7 +36,7 @@ func testTupleNil() throws {
 }
 
 @Test("TupleString encoding and decoding")
-func testTupleString() throws {
+func tupleString() throws {
     let testString = "Hello, World!"
     let encoded = testString.encodeTuple()
 
@@ -50,7 +50,7 @@ func testTupleString() throws {
 }
 
 @Test("TupleString with null bytes")
-func testTupleStringWithNulls() throws {
+func tupleStringWithNulls() throws {
     let testString = "Hello\u{0}World"
     let encoded = testString.encodeTuple()
 
@@ -63,7 +63,7 @@ func testTupleStringWithNulls() throws {
 }
 
 @Test("TupleBool encoding and decoding")
-func testTupleBool() throws {
+func tupleBool() throws {
     let testTrue = true
     let testFalse = false
 
@@ -84,7 +84,7 @@ func testTupleBool() throws {
 }
 
 @Test("TupleFloat encoding and decoding")
-func testTupleFloat() throws {
+func tupleFloat() throws {
     let testFloat: Float = 3.14159
     let encoded = testFloat.encodeTuple()
 
@@ -98,8 +98,8 @@ func testTupleFloat() throws {
 }
 
 @Test("TupleDouble encoding and decoding")
-func testTupleDouble() throws {
-    let testDouble: Double = 3.141592653589793
+func tupleDouble() throws {
+    let testDouble = 3.141592653589793
     let encoded = testDouble.encodeTuple()
 
     #expect(encoded.first == TupleTypeCode.double.rawValue, "Double should start with double type code")
@@ -112,7 +112,7 @@ func testTupleDouble() throws {
 }
 
 @Test("TupleUUID encoding and decoding")
-func testTupleUUID() throws {
+func tupleUUID() throws {
     let testUUID = UUID()
     let encoded = testUUID.encodeTuple()
 
@@ -126,7 +126,7 @@ func testTupleUUID() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - Zero")
-func testTupleInt64Zero() throws {
+func tupleInt64Zero() throws {
     let testInt: Int64 = 0
     let encoded = testInt.encodeTuple()
 
@@ -139,7 +139,7 @@ func testTupleInt64Zero() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - Small positive")
-func testTupleInt64SmallPositive() throws {
+func tupleInt64SmallPositive() throws {
     let testInt: Int64 = 42
     let encoded = testInt.encodeTuple()
 
@@ -152,7 +152,7 @@ func testTupleInt64SmallPositive() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - Very small negative")
-func testTupleInt64VerySmallNegative() throws {
+func tupleInt64VerySmallNegative() throws {
     let testInt: Int64 = -42
     let encoded = testInt.encodeTuple()
 
@@ -165,7 +165,7 @@ func testTupleInt64VerySmallNegative() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - Large negative")
-func testTupleInt64LargeNegative() throws {
+func tupleInt64LargeNegative() throws {
     let testInt: Int64 = -89_034_333_444
     let encoded = testInt.encodeTuple()
 
@@ -176,8 +176,8 @@ func testTupleInt64LargeNegative() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - Very Large negative")
-func testTupleInt64VeryLargeNegative() throws {
-    let testInt: Int64 = -(1 <<  55) - 34897432
+func tupleInt64VeryLargeNegative() throws {
+    let testInt: Int64 = -(1 << 55) - 34_897_432
     let encoded = testInt.encodeTuple()
 
     var offset = 1
@@ -187,8 +187,8 @@ func testTupleInt64VeryLargeNegative() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - VeryVery Large negative")
-func testTupleInt64VeryLargeNegative2() throws {
-    let testInt: Int64 = -(1 <<  60) - 34897432
+func tupleInt64VeryLargeNegative2() throws {
+    let testInt: Int64 = -(1 << 60) - 34_897_432
     let encoded = testInt.encodeTuple()
 
     var offset = 1
@@ -198,9 +198,9 @@ func testTupleInt64VeryLargeNegative2() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - Large values")
-func testTupleInt64LargeValues() throws {
-    let largePositive: Int64 = Int64.max
-    let largeNegative: Int64 = Int64.min + 1
+func tupleInt64LargeValues() throws {
+    let largePositive = Int64.max
+    let largeNegative = Int64.min + 1
 
     let encodedPos = largePositive.encodeTuple()
     let encodedNeg = largeNegative.encodeTuple()
@@ -216,7 +216,7 @@ func testTupleInt64LargeValues() throws {
 }
 
 @Test("TupleInt32 encoding and decoding")
-func testTupleInt32() throws {
+func tupleInt32() throws {
     let testInt: Int32 = -2_034_333_444
     let encoded = testInt.encodeTuple()
 
@@ -226,8 +226,8 @@ func testTupleInt32() throws {
 }
 
 @Test("TupleInt encoding and decoding")
-func testTupleInt() throws {
-    let testInt: Int = 123456
+func tupleInt() throws {
+    let testInt = 123_456
     let encoded = testInt.encodeTuple()
 
     var offset = 1
@@ -236,8 +236,8 @@ func testTupleInt() throws {
 }
 
 @Test("TupleUInt64 encoding and decoding")
-func testTupleUInt64() throws {
-    let testUInt: UInt64 = 999999
+func tupleUInt64() throws {
+    let testUInt: UInt64 = 999_999
     let encoded = testUInt.encodeTuple()
 
     var offset = 1
@@ -246,7 +246,7 @@ func testTupleUInt64() throws {
 }
 
 @Test("TupleNested encoding and decoding")
-func testTupleNested() throws {
+func tupleNested() throws {
     let innerTuple = Tuple("hello", 42, true)
     let outerTuple = Tuple("outer", innerTuple, "end")
 
@@ -267,7 +267,7 @@ func testTupleNested() throws {
 }
 
 @Test("Tuple with a zero integer")
-func testTupleWithZero() throws {
+func tupleWithZero() throws {
     let tuple = Tuple("hello", 0, "foo")
 
     let encoded = tuple.encode()
@@ -284,9 +284,8 @@ func testTupleWithZero() throws {
     #expect(decodedString2 == "foo")
 }
 
-
 @Test("TupleNested deep nesting")
-func testTupleNestedDeep() throws {
+func tupleNestedDeep() throws {
     let level3 = Tuple("deep", 123)
     let level2 = Tuple("middle", level3)
     let level1 = Tuple("top", level2, "bottom")
@@ -308,19 +307,19 @@ func testTupleNestedDeep() throws {
 }
 
 @Test("TupleInt64 encoding and decoding - 1 million distributed integers")
-func testTupleInt64DistributedIntegers() throws {
+func tupleInt64DistributedIntegers() throws {
     // Deterministic random number generator using LCG algorithm
     var seed: UInt64 = 12345
     func nextRandom() -> Int64 {
         // Generate full 64-bit value
-        seed = seed &* 6364136223846793005 &+ 1442695040888963407
+        seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
         return Int64(bitPattern: seed)
     }
 
     // Test 10000 integers
-    var positive: Int = 0
-    var negative: Int = 0
-    for _ in 0..<1000000 {
+    var positive = 0
+    var negative = 0
+    for _ in 0 ..< 1_000_000 {
         let testInt = nextRandom()
         let encoded = testInt.encodeTuple()
 

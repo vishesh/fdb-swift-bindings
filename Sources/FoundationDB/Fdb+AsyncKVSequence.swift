@@ -23,7 +23,7 @@
 /// This file implements efficient streaming iteration over large result sets from FoundationDB
 /// using Swift's AsyncSequence protocol with optimized background pre-fetching.
 
-public extension FDB {
+extension FDB {
     /// An asynchronous sequence that efficiently streams key-value pairs from FoundationDB.
     ///
     /// `AsyncKVSequence` provides a Swift-native way to iterate over large result sets from
@@ -60,7 +60,7 @@ public extension FDB {
     /// 3. Only blocks when transitioning between batches if pre-fetch isn't complete
     ///
     /// This design minimizes the impact of network latency on iteration performance.
-    struct AsyncKVSequence: AsyncSequence {
+    public struct AsyncKVSequence: AsyncSequence {
         public typealias Element = KeyValue
 
         /// The transaction used for range queries

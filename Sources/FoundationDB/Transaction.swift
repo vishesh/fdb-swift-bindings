@@ -164,19 +164,19 @@ public final class FDBTransaction: TransactionProtocol, @unchecked Sendable {
     }
 
     public func getEstimatedRangeSizeBytes(beginKey: FDB.Key, endKey: FDB.Key) async throws -> Int {
-        Int(try await beginKey.withUnsafeBytes { beginKeyBytes in
-                endKey.withUnsafeBytes { endKeyBytes in
-                    Future<ResultInt64>(
-                      fdb_transaction_get_estimated_range_size_bytes(
+        try Int(await beginKey.withUnsafeBytes { beginKeyBytes in
+            endKey.withUnsafeBytes { endKeyBytes in
+                Future<ResultInt64>(
+                    fdb_transaction_get_estimated_range_size_bytes(
                         transaction,
                         beginKeyBytes.bindMemory(to: UInt8.self).baseAddress,
                         Int32(beginKey.count),
                         endKeyBytes.bindMemory(to: UInt8.self).baseAddress,
                         Int32(endKey.count)
-                      )
                     )
-                }
-            }.getAsync()?.value ?? 0)
+                )
+            }
+        }.getAsync()?.value ?? 0)
     }
 
     public func getRangeSplitPoints(beginKey: FDB.Key, endKey: FDB.Key, chunkSize: Int) async throws -> [[UInt8]] {
@@ -206,9 +206,9 @@ public final class FDBTransaction: TransactionProtocol, @unchecked Sendable {
     }
 
     public func getApproximateSize() async throws -> Int {
-        Int(try await Future<ResultInt64>(
+        try Int(await Future<ResultInt64>(
             fdb_transaction_get_approximate_size(transaction)
-            ).getAsync()?.value ?? 0)
+        ).getAsync()?.value ?? 0)
     }
 
     public func addConflictRange(beginKey: FDB.Key, endKey: FDB.Key, type: FDB.ConflictRangeType) throws {
