@@ -30,14 +30,14 @@ struct StackEntry {
 class StackMachine {
     private let prefix: [UInt8]
     private var stack: [StackEntry] = []
-    private var database: FdbDatabase
+    private var database: FDBDatabase
     private let verbose: Bool
-    private var transaction: (any ITransaction)?
-    private var transactionMap: [String: any ITransaction] = [:]
+    private var transaction: (any TransactionProtocol)?
+    private var transactionMap: [String: any TransactionProtocol] = [:]
     private var transactionName: String = "MAIN"
     private var lastVersion: Int64 = 0
 
-    init(prefix: [UInt8], database: FdbDatabase, verbose: Bool) {
+    init(prefix: [UInt8], database: FDBDatabase, verbose: Bool) {
         self.prefix = prefix
         self.database = database
         self.verbose = verbose
@@ -70,7 +70,7 @@ class StackMachine {
     }
 
     // Get current transaction (create if needed)
-    func currentTransaction() throws -> any ITransaction {
+    func currentTransaction() throws -> any TransactionProtocol {
         if let existingTransaction = transactionMap[transactionName] {
             return existingTransaction
         }
@@ -228,8 +228,8 @@ class StackMachine {
             let errorCode = waitAndPop().item as! Int64
             let transaction = try currentTransaction()
 
-            // Create FdbError from the error code
-            let error = FdbError(code: Int(errorCode))
+            // Create FDBError from the error code
+            let error = FDBError(code: Int(errorCode))
 
             // Call onError which will wait and handle the error appropriately
             do {
@@ -300,7 +300,7 @@ class StackMachine {
             store(idx, Array("COMMIT_RESULT".utf8))
 
         case "RESET":
-            if let transaction = transactionMap[transactionName] as? FdbTransaction {
+            if let transaction = transactionMap[transactionName] as? FDBTransaction {
                 try newTransaction()
             }
 
@@ -316,7 +316,7 @@ class StackMachine {
             let orEqual = (waitAndPop().item as! Int64) != 0
             let key = waitAndPop().item as! [UInt8]
 
-            let selector = Fdb.KeySelector(key: key, orEqual: orEqual, offset: offset)
+            let selector = FDB.KeySelector(key: key, orEqual: orEqual, offset: offset)
             let transaction = try currentTransaction()
 
             if let resultKey = try await transaction.getKey(selector: selector, snapshot: false) {
@@ -380,8 +380,8 @@ class StackMachine {
             let beginOrEqual = (waitAndPop().item as! Int64) != 0
             let beginKey = waitAndPop().item as! [UInt8]
 
-            let beginSelector = Fdb.KeySelector(key: beginKey, orEqual: beginOrEqual, offset: beginOffset)
-            let endSelector = Fdb.KeySelector(key: endKey, orEqual: endOrEqual, offset: endOffset)
+            let beginSelector = FDB.KeySelector(key: beginKey, orEqual: beginOrEqual, offset: beginOffset)
+            let endSelector = FDB.KeySelector(key: endKey, orEqual: endOrEqual, offset: endOffset)
             let transaction = try currentTransaction()
 
             let result = try await transaction.getRange(
@@ -437,7 +437,7 @@ class StackMachine {
 
             // Convert opType string to MutationType
             let opTypeString = String(bytes: opType, encoding: .utf8) ?? ""
-            let mutationType: Fdb.MutationType
+            let mutationType: FDB.MutationType
             switch opTypeString {
             case "ADD":
                 mutationType = .add

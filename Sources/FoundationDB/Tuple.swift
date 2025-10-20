@@ -44,8 +44,8 @@ enum TupleTypeCode: UInt8, CaseIterable {
 }
 
 public protocol TupleElement: Sendable {
-    func encodeTuple() -> Fdb.Bytes
-    static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Self
+    func encodeTuple() -> FDB.Bytes
+    static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Self
 }
 
 // TODO: Make it a TypedTuple so that we don't have to typecast manually.
@@ -69,15 +69,15 @@ public struct Tuple: Sendable {
         return elements.count
     }
 
-    public func encode() -> Fdb.Bytes {
-        var result = Fdb.Bytes()
+    public func encode() -> FDB.Bytes {
+        var result = FDB.Bytes()
         for element in elements {
             result.append(contentsOf: element.encodeTuple())
         }
         return result
     }
 
-    public static func decode(from bytes: Fdb.Bytes) throws -> [any TupleElement] {
+    public static func decode(from bytes: FDB.Bytes) throws -> [any TupleElement] {
         var elements: [any TupleElement] = []
         var offset = 0
 
@@ -89,7 +89,7 @@ public struct Tuple: Sendable {
             case TupleTypeCode.null.rawValue:
                 elements.append(TupleNil())
             case TupleTypeCode.bytes.rawValue:
-                let element = try Fdb.Bytes.decodeTuple(from: bytes, at: &offset)
+                let element = try FDB.Bytes.decodeTuple(from: bytes, at: &offset)
                 elements.append(element)
             case TupleTypeCode.string.rawValue:
                 let element = try String.decodeTuple(from: bytes, at: &offset)
@@ -124,17 +124,17 @@ public struct Tuple: Sendable {
 }
 
 struct TupleNil: TupleElement {
-    func encodeTuple() -> Fdb.Bytes {
+    func encodeTuple() -> FDB.Bytes {
         return [TupleTypeCode.null.rawValue]
     }
 
-    static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> TupleNil {
+    static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> TupleNil {
         return TupleNil()
     }
 }
 
 extension String: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.string.rawValue]
         let utf8Bytes = Array(self.utf8)
 
@@ -149,8 +149,8 @@ extension String: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> String {
-        var decoded = Fdb.Bytes()
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> String {
+        var decoded = FDB.Bytes()
 
         while offset < bytes.count {
             let byte = bytes[offset]
@@ -172,8 +172,8 @@ extension String: TupleElement {
     }
 }
 
-extension Fdb.Bytes: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+extension FDB.Bytes: TupleElement {
+    public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.bytes.rawValue]
         for byte in self {
             if byte == 0x00 {
@@ -186,9 +186,9 @@ extension Fdb.Bytes: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Fdb.Bytes
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> FDB.Bytes
     {
-        var decoded = Fdb.Bytes()
+        var decoded = FDB.Bytes()
 
         while offset < bytes.count {
             let byte = bytes[offset]
@@ -211,11 +211,11 @@ extension Fdb.Bytes: TupleElement {
 }
 
 extension Bool: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         return self ? [TupleTypeCode.boolTrue.rawValue] : [TupleTypeCode.boolFalse.rawValue]
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Bool {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Bool {
         guard offset > 0 else {
             throw TupleError.invalidDecoding("Bool decoding requires type code")
         }
@@ -233,7 +233,7 @@ extension Bool: TupleElement {
 }
 
 extension Float: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.float.rawValue]
         let bitPattern = self.bitPattern
         let bytes = withUnsafeBytes(of: bitPattern.bigEndian) { Array($0) }
@@ -241,7 +241,7 @@ extension Float: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Float {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Float {
         guard offset + 4 <= bytes.count else {
             throw TupleError.invalidDecoding("Not enough bytes for Float")
         }
@@ -258,7 +258,7 @@ extension Float: TupleElement {
 }
 
 extension Double: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.double.rawValue]
         let bitPattern = self.bitPattern
         let bytes = withUnsafeBytes(of: bitPattern.bigEndian) { Array($0) }
@@ -266,7 +266,7 @@ extension Double: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Double {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Double {
         guard offset + 8 <= bytes.count else {
             throw TupleError.invalidDecoding("Not enough bytes for Double")
         }
@@ -283,7 +283,7 @@ extension Double: TupleElement {
 }
 
 extension UUID: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.uuid.rawValue]
         let (u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15, u16) = self.uuid
         encoded.append(contentsOf: [
@@ -292,7 +292,7 @@ extension UUID: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> UUID {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> UUID {
         guard offset + 16 <= bytes.count else {
             throw TupleError.invalidDecoding("Not enough bytes for UUID")
         }
@@ -332,16 +332,16 @@ private func bisectLeft(_ value: UInt64) -> Int {
 }
 
 extension Int64: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         return encodeInt(self)
     }
 
-    private func encodeInt(_ value: Int64) -> Fdb.Bytes {
+    private func encodeInt(_ value: Int64) -> FDB.Bytes {
         if value == 0 {
             return [TupleTypeCode.intZero.rawValue]
         }
 
-        var encoded = Fdb.Bytes()
+        var encoded = FDB.Bytes()
         if value > 0 {
             let n = bisectLeft(UInt64(value))
             encoded.append(TupleTypeCode.intZero.rawValue + UInt8(n))
@@ -369,7 +369,7 @@ extension Int64: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Int64 {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Int64 {
         guard offset > 0 else {
             throw TupleError.invalidDecoding("Int64 decoding requires type code")
         }
@@ -412,7 +412,7 @@ extension Int64: TupleElement {
 }
 
 extension Tuple: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         var encoded = [TupleTypeCode.nested.rawValue]
         for element in elements {
             let elementBytes = element.encodeTuple()
@@ -428,8 +428,8 @@ extension Tuple: TupleElement {
         return encoded
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Tuple {
-        var nestedBytes = Fdb.Bytes()
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Tuple {
+        var nestedBytes = FDB.Bytes()
 
         while offset < bytes.count {
             let byte = bytes[offset]
@@ -453,11 +453,11 @@ extension Tuple: TupleElement {
 }
 
 extension Int: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         return Int64(self).encodeTuple()
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Int {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Int {
         let value = try Int64.decodeTuple(from: bytes, at: &offset)
         guard value >= Int.min && value <= Int.max else {
             throw TupleError.invalidDecoding("Int64 value \(value) out of range for Int")
@@ -467,11 +467,11 @@ extension Int: TupleElement {
 }
 
 extension Int32: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         return Int64(self).encodeTuple()
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> Int32 {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> Int32 {
         let value = try Int64.decodeTuple(from: bytes, at: &offset)
         guard value >= Int32.min && value <= Int32.max else {
             throw TupleError.invalidDecoding("Int64 value \(value) out of range for Int32")
@@ -481,7 +481,7 @@ extension Int32: TupleElement {
 }
 
 extension UInt64: TupleElement {
-    public func encodeTuple() -> Fdb.Bytes {
+    public func encodeTuple() -> FDB.Bytes {
         if self <= Int64.max {
             return Int64(self).encodeTuple()
         } else {
@@ -489,7 +489,7 @@ extension UInt64: TupleElement {
         }
     }
 
-    public static func decodeTuple(from bytes: Fdb.Bytes, at offset: inout Int) throws -> UInt64 {
+    public static func decodeTuple(from bytes: FDB.Bytes, at offset: inout Int) throws -> UInt64 {
         let value = try Int64.decodeTuple(from: bytes, at: &offset)
         guard value >= 0 else {
             throw TupleError.invalidDecoding(

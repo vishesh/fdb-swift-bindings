@@ -43,8 +43,8 @@ var finalError: Error? = nil
 
 Task {
     do {
-        try await FdbClient.initialize(version: apiVersion)
-        let database = try FdbClient.openDatabase(clusterFilePath: clusterFile)
+        try await FDBClient.initialize(version: apiVersion)
+        let database = try FDBClient.openDatabase(clusterFilePath: clusterFile)
         let stackMachine = StackMachine(prefix: prefix, database: database, verbose: false)
         try await stackMachine.run()
         print("StackMachine completed successfully")

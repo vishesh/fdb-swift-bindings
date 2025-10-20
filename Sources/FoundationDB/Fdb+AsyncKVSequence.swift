@@ -1,5 +1,5 @@
 /*
- * Fdb+AsyncKVSequence.swift
+ * FDB+AsyncKVSequence.swift
  *
  * This source file is part of the FoundationDB open source project
  *
@@ -23,7 +23,7 @@
 /// This file implements efficient streaming iteration over large result sets from FoundationDB
 /// using Swift's AsyncSequence protocol with optimized background pre-fetching.
 
-public extension Fdb {
+public extension FDB {
     /// An asynchronous sequence that efficiently streams key-value pairs from FoundationDB.
     ///
     /// `AsyncKVSequence` provides a Swift-native way to iterate over large result sets from
@@ -64,11 +64,11 @@ public extension Fdb {
         public typealias Element = KeyValue
 
         /// The transaction used for range queries
-        let transaction: ITransaction
+        let transaction: TransactionProtocol
         /// Starting key selector for the range
-        let beginSelector: Fdb.KeySelector
+        let beginSelector: FDB.KeySelector
         /// Ending key selector for the range (exclusive)
-        let endSelector: Fdb.KeySelector
+        let endSelector: FDB.KeySelector
         /// Whether to use snapshot reads
         let snapshot: Bool
         /// Maximum number of key-value pairs to fetch per batch (0 = use FDB default)
@@ -110,11 +110,11 @@ public extension Fdb {
         /// Multiple iterators can be created from the same sequence for concurrent processing.
         public struct AsyncIterator: AsyncIteratorProtocol {
             /// Transaction used for all range queries
-            private let transaction: ITransaction
+            private let transaction: TransactionProtocol
             /// Key selector for the next batch to fetch
-            private var nextBeginSelector: Fdb.KeySelector
+            private var nextBeginSelector: FDB.KeySelector
             /// End key selector (remains constant)
-            private let endSelector: Fdb.KeySelector
+            private let endSelector: FDB.KeySelector
             /// Whether to use snapshot reads
             private let snapshot: Bool
             /// Batch size limit
@@ -146,8 +146,8 @@ public extension Fdb {
             ///   - snapshot: Whether to use snapshot reads
             ///   - batchLimit: Maximum items per batch (0 = FDB default)
             init(
-                transaction: ITransaction, beginSelector: Fdb.KeySelector,
-                endSelector: Fdb.KeySelector, snapshot: Bool, batchLimit: Int
+                transaction: TransactionProtocol, beginSelector: FDB.KeySelector,
+                endSelector: FDB.KeySelector, snapshot: Bool, batchLimit: Int
             ) {
                 self.transaction = transaction
                 nextBeginSelector = beginSelector
@@ -171,7 +171,7 @@ public extension Fdb {
             /// and the next batch isn't ready yet.
             ///
             /// - Returns: The next key-value pair, or `nil` if sequence is exhausted
-            /// - Throws: `FdbError` if the database operation fails
+            /// - Throws: `FDBError` if the database operation fails
             public mutating func next() async throws -> KeyValue? {
                 if isExhausted {
                     return nil
@@ -197,10 +197,10 @@ public extension Fdb {
             /// move to the next batch. It waits for the background pre-fetch task to complete,
             /// updates the iterator state, and starts pre-fetching the subsequent batch.
             ///
-            /// - Throws: `FdbError` if the pre-fetch operation failed
+            /// - Throws: `FDBError` if the pre-fetch operation failed
             private mutating func updateCurrentBatch() async throws {
                 guard let nextBatch = try await preFetchTask?.value else {
-                    throw FdbError(.clientError)
+                    throw FDBError(.clientError)
                 }
 
                 assert(currentIndex >= currentBatch.records.count)
@@ -209,7 +209,7 @@ public extension Fdb {
 
                 if !currentBatch.records.isEmpty, currentBatch.more {
                     let lastKey = nextBatch.records.last!.0
-                    nextBeginSelector = Fdb.KeySelector.firstGreaterThan(lastKey)
+                    nextBeginSelector = FDB.KeySelector.firstGreaterThan(lastKey)
                     startBackgroundPreFetch()
                 } else {
                     preFetchTask = nil

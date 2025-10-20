@@ -20,7 +20,7 @@
 import CFoundationDB
 
 // TODO: These should be auto-generated like other bindings
-enum FdbErrorCode: Int32, CaseIterable {
+enum FDBErrorCode: Int32, CaseIterable {
     case notCommitted = 1007
     case transactionTooOld = 1020
     case futureVersion = 1021
@@ -34,7 +34,7 @@ enum FdbErrorCode: Int32, CaseIterable {
     case unknownError = 9999
 }
 
-public struct FdbError: Error, CustomStringConvertible {
+public struct FDBError: Error, CustomStringConvertible {
     public let code: Int32
 
     public init(code: Int) {
@@ -45,7 +45,7 @@ public struct FdbError: Error, CustomStringConvertible {
         self.code = code
     }
 
-    init(_ errorCode: FdbErrorCode) {
+    init(_ errorCode: FDBErrorCode) {
         code = errorCode.rawValue
     }
 
@@ -58,19 +58,19 @@ public struct FdbError: Error, CustomStringConvertible {
 
     public var isRetryable: Bool {
         switch code {
-        case FdbErrorCode.notCommitted.rawValue:
+        case FDBErrorCode.notCommitted.rawValue:
             return true
-        case FdbErrorCode.transactionTooOld.rawValue:
+        case FDBErrorCode.transactionTooOld.rawValue:
             return true
-        case FdbErrorCode.futureVersion.rawValue:
+        case FDBErrorCode.futureVersion.rawValue:
             return true
-        case FdbErrorCode.transactionCancelled.rawValue:
+        case FDBErrorCode.transactionCancelled.rawValue:
             return false
-        case FdbErrorCode.transactionTimedOut.rawValue:
+        case FDBErrorCode.transactionTimedOut.rawValue:
             return true
-        case FdbErrorCode.processBehind.rawValue:
+        case FDBErrorCode.processBehind.rawValue:
             return true
-        case FdbErrorCode.tagThrottled.rawValue:
+        case FDBErrorCode.tagThrottled.rawValue:
             return true
         default:
             return false
