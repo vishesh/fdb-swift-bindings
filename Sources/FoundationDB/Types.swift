@@ -27,10 +27,10 @@ typealias CCallback = @convention(c) (UnsafeRawPointer?, UnsafeRawPointer?) -> V
 
 /// Core FoundationDB type definitions and utilities.
 ///
-/// The `Fdb` namespace contains all fundamental types used throughout the
+/// The `FDB` namespace contains all fundamental types used throughout the
 /// FoundationDB Swift bindings, including keys, values, version numbers,
 /// and key selector utilities.
-public enum Fdb {
+public enum FDB {
     /// A FoundationDB version number (64-bit integer).
     public typealias Version = Int64
     /// Raw byte data used throughout the FoundationDB API.
@@ -52,7 +52,7 @@ public enum Fdb {
         /// Converts this instance to a key selector.
         ///
         /// - Returns: A `KeySelector` representing this selectable.
-        func toKeySelector() -> Fdb.KeySelector
+        func toKeySelector() -> FDB.KeySelector
     }
 
     /// A key selector that specifies a key position within the database.
@@ -63,10 +63,10 @@ public enum Fdb {
     /// ## Usage Examples
     /// ```swift
     /// // Select the first key >= "apple"
-    /// let selector = Fdb.KeySelector.firstGreaterOrEqual("apple")
+    /// let selector = FDB.KeySelector.firstGreaterOrEqual("apple")
     ///
     /// // Select the last key < "zebra"
-    /// let selector = Fdb.KeySelector.lastLessThan("zebra")
+    /// let selector = FDB.KeySelector.lastLessThan("zebra")
     /// ```
     public struct KeySelector: Selectable, Sendable {
         /// The reference key for this selector.
@@ -131,16 +131,16 @@ public enum Fdb {
     }
 }
 
-/// Extension making `Fdb.Key` conformant to `Selectable`.
+/// Extension making `FDB.Key` conformant to `Selectable`.
 ///
 /// This allows key byte arrays to be used directly in range operations
 /// by converting them to "first greater or equal" key selectors.
-extension Fdb.Key: Fdb.Selectable {
+extension FDB.Key: FDB.Selectable {
     /// Converts this key to a key selector using "first greater or equal" semantics.
     ///
     /// - Returns: A key selector that selects the first key >= this key.
-    public func toKeySelector() -> Fdb.KeySelector {
-        return Fdb.KeySelector.firstGreaterOrEqual(self)
+    public func toKeySelector() -> FDB.KeySelector {
+        return FDB.KeySelector.firstGreaterOrEqual(self)
     }
 }
 
@@ -148,11 +148,11 @@ extension Fdb.Key: Fdb.Selectable {
 ///
 /// This allows strings to be used directly in range operations by converting
 /// them to UTF-8 bytes and then to "first greater or equal" key selectors.
-extension String: Fdb.Selectable {
+extension String: FDB.Selectable {
     /// Converts this string to a key selector using "first greater or equal" semantics.
     ///
     /// - Returns: A key selector that selects the first key >= this string (as UTF-8 bytes).
-    public func toKeySelector() -> Fdb.KeySelector {
-        return Fdb.KeySelector.firstGreaterOrEqual([UInt8](utf8))
+    public func toKeySelector() -> FDB.KeySelector {
+        return FDB.KeySelector.firstGreaterOrEqual([UInt8](utf8))
     }
 }

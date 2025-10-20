@@ -31,7 +31,7 @@ protocol FutureResult: Sendable {
     ///
     /// - Parameter fromFuture: The C future pointer to extract from.
     /// - Returns: The extracted result value, or nil if no value is present.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self?
 }
 
@@ -67,7 +67,7 @@ class Future<T: FutureResult> {
     /// allowing the caller to await the result of the underlying C future.
     ///
     /// - Returns: The result value extracted from the future, or nil if no value is present.
-    /// - Throws: `FdbError` if the future operation failed.
+    /// - Throws: `FDBError` if the future operation failed.
     func getAsync() async throws -> T? {
         try await withCheckedThrowingContinuation {
             (continuation: CheckedContinuation<T?, Error>) in
@@ -75,7 +75,7 @@ class Future<T: FutureResult> {
                 do {
                     let err = fdb_future_get_error(future)
                     if err != 0 {
-                        throw FdbError(code: err)
+                        throw FDBError(code: err)
                     }
 
                     let value = try T.extract(fromFuture: self.cFuture)
@@ -130,11 +130,11 @@ struct ResultVoid: FutureResult {
     ///
     /// - Parameter fromFuture: The C future to check for errors.
     /// - Returns: A `ResultVoid` instance if successful.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
         let err = fdb_future_get_error(fromFuture)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
 
         return Self()
@@ -146,18 +146,18 @@ struct ResultVoid: FutureResult {
 /// Used for operations that return transaction version stamps or read versions.
 struct ResultVersion: FutureResult {
     /// The extracted version value.
-    let value: Fdb.Version
+    let value: FDB.Version
 
     /// Extracts a version from the future.
     ///
     /// - Parameter fromFuture: The C future containing the version.
     /// - Returns: A `ResultVersion` with the extracted version.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
-        var version: Fdb.Version = 0
+        var version: FDB.Version = 0
         let err = fdb_future_get_int64(fromFuture, &version)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
         return Self(value: version)
     }
@@ -174,12 +174,12 @@ struct ResultInt64: FutureResult {
     ///
     /// - Parameter fromFuture: The C future containing the integer.
     /// - Returns: A `ResultInt64` with the extracted value.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
         var value: Int64 = 0
         let err = fdb_future_get_int64(fromFuture, &value)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
         return Self(value: value)
     }
@@ -190,20 +190,20 @@ struct ResultInt64: FutureResult {
 /// Used for operations like key selectors that resolve to actual keys.
 struct ResultKey: FutureResult {
     /// The extracted key, or nil if no key was returned.
-    let value: Fdb.Key?
+    let value: FDB.Key?
 
     /// Extracts a key from the future.
     ///
     /// - Parameter fromFuture: The C future containing the key data.
     /// - Returns: A `ResultKey` with the extracted key, or nil if no key present.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
         var keyPtr: UnsafePointer<UInt8>?
         var keyLen: Int32 = 0
 
         let err = fdb_future_get_key(fromFuture, &keyPtr, &keyLen)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
 
         if let keyPtr {
@@ -220,13 +220,13 @@ struct ResultKey: FutureResult {
 /// Used for get operations that retrieve values associated with keys.
 struct ResultValue: FutureResult {
     /// The extracted value, or nil if no value was found.
-    let value: Fdb.Value?
+    let value: FDB.Value?
 
     /// Extracts a value from the future.
     ///
     /// - Parameter fromFuture: The C future containing the value data.
     /// - Returns: A `ResultValue` with the extracted value, or nil if not present.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
         var present: Int32 = 0
         var valPtr: UnsafePointer<UInt8>?
@@ -234,7 +234,7 @@ struct ResultValue: FutureResult {
 
         let err = fdb_future_get_value(fromFuture, &present, &valPtr, &valLen)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
 
         if present != 0, let valPtr {
@@ -252,7 +252,7 @@ struct ResultValue: FutureResult {
 /// with information about whether more data is available.
 public struct ResultRange: FutureResult {
     /// The array of key-value pairs returned by the range operation.
-    public let records: Fdb.KeyValueArray
+    public let records: FDB.KeyValueArray
     /// Indicates whether there are more records beyond this result.
     public let more: Bool
 
@@ -260,7 +260,7 @@ public struct ResultRange: FutureResult {
     ///
     /// - Parameter fromFuture: The C future containing the key-value array.
     /// - Returns: A `ResultRange` with the extracted records and more flag.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
         var kvPtr: UnsafePointer<FDBKeyValue>?
         var count: Int32 = 0
@@ -268,14 +268,14 @@ public struct ResultRange: FutureResult {
 
         let err = fdb_future_get_keyvalue_array(fromFuture, &kvPtr, &count, &more)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
 
         guard let kvPtr = kvPtr, count > 0 else {
             return nil
         }
 
-        var keyValueArray: Fdb.KeyValueArray = []
+        var keyValueArray: FDB.KeyValueArray = []
         for i in 0 ..< Int(count) {
             let kv = kvPtr[i]
             let key = Array(UnsafeBufferPointer(start: kv.key, count: Int(kv.key_length)))
@@ -298,14 +298,14 @@ struct ResultKeyArray: FutureResult {
     ///
     /// - Parameter fromFuture: The C future containing the key array.
     /// - Returns: A `ResultKeyArray` with the extracted keys.
-    /// - Throws: `FdbError` if the future contains an error.
+    /// - Throws: `FDBError` if the future contains an error.
     static func extract(fromFuture: CFuturePtr) throws -> Self? {
         var keysPtr: UnsafePointer<FDBKey>?
         var count: Int32 = 0
 
         let err = fdb_future_get_key_array(fromFuture, &keysPtr, &count)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
 
         guard let keysPtr = keysPtr, count > 0 else {

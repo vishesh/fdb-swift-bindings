@@ -19,7 +19,7 @@
  */
 import CFoundationDB
 
-public final class FdbTransaction: ITransaction, @unchecked Sendable {
+public final class FDBTransaction: TransactionProtocol, @unchecked Sendable {
     private let transaction: OpaquePointer
 
     init(transaction: OpaquePointer) {
@@ -30,7 +30,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         fdb_transaction_destroy(transaction)
     }
 
-    public func getValue(for key: Fdb.Key, snapshot: Bool) async throws -> Fdb.Value? {
+    public func getValue(for key: FDB.Key, snapshot: Bool) async throws -> FDB.Value? {
         try await key.withUnsafeBytes { keyBytes in
             Future<ResultValue>(
                 fdb_transaction_get(
@@ -43,7 +43,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }.getAsync()?.value
     }
 
-    public func setValue(_ value: Fdb.Value, for key: Fdb.Key) {
+    public func setValue(_ value: FDB.Value, for key: FDB.Key) {
         key.withUnsafeBytes { keyBytes in
             value.withUnsafeBytes { valueBytes in
                 fdb_transaction_set(
@@ -57,7 +57,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }
     }
 
-    public func clear(key: Fdb.Key) {
+    public func clear(key: FDB.Key) {
         key.withUnsafeBytes { keyBytes in
             fdb_transaction_clear(
                 transaction,
@@ -67,7 +67,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }
     }
 
-    public func clearRange(beginKey: Fdb.Key, endKey: Fdb.Key) {
+    public func clearRange(beginKey: FDB.Key, endKey: FDB.Key) {
         beginKey.withUnsafeBytes { beginKeyBytes in
             endKey.withUnsafeBytes { endKeyBytes in
                 fdb_transaction_clear_range(
@@ -81,7 +81,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }
     }
 
-    public func atomicOp(key: Fdb.Key, param: Fdb.Value, mutationType: Fdb.MutationType) {
+    public func atomicOp(key: FDB.Key, param: FDB.Value, mutationType: FDB.MutationType) {
         key.withUnsafeBytes { keyBytes in
             param.withUnsafeBytes { paramBytes in
                 fdb_transaction_atomic_op(
@@ -96,7 +96,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }
     }
 
-    public func setOption(_ option: Fdb.TransactionOption, value: Fdb.Value?) throws {
+    public func setOption(_ option: FDB.TransactionOption, value: FDB.Value?) throws {
         let error: Int32
         if let value = value {
             error = value.withUnsafeBytes { bytes in
@@ -112,11 +112,11 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }
 
         if error != 0 {
-            throw FdbError(code: error)
+            throw FDBError(code: error)
         }
     }
 
-    public func getKey(selector: Fdb.KeySelector, snapshot: Bool) async throws -> Fdb.Key? {
+    public func getKey(selector: FDB.KeySelector, snapshot: Bool) async throws -> FDB.Key? {
         try await selector.key.withUnsafeBytes { keyBytes in
             Future<ResultKey>(
                 fdb_transaction_get_key(
@@ -141,29 +141,29 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         fdb_transaction_cancel(transaction)
     }
 
-    public func getVersionstamp() async throws -> Fdb.Key? {
+    public func getVersionstamp() async throws -> FDB.Key? {
         try await Future<ResultKey>(
             fdb_transaction_get_versionstamp(transaction)
         ).getAsync()?.value
     }
 
-    public func setReadVersion(_ version: Fdb.Version) {
+    public func setReadVersion(_ version: FDB.Version) {
         fdb_transaction_set_read_version(transaction, version)
     }
 
-    public func getReadVersion() async throws -> Fdb.Version {
+    public func getReadVersion() async throws -> FDB.Version {
         try await Future<ResultVersion>(
             fdb_transaction_get_read_version(transaction)
         ).getAsync()?.value ?? 0
     }
 
-    public func onError(_ error: FdbError) async throws {
+    public func onError(_ error: FDBError) async throws {
         try await Future<ResultVoid>(
             fdb_transaction_on_error(transaction, error.code)
         ).getAsync()
     }
 
-    public func getEstimatedRangeSizeBytes(beginKey: Fdb.Key, endKey: Fdb.Key) async throws -> Int {
+    public func getEstimatedRangeSizeBytes(beginKey: FDB.Key, endKey: FDB.Key) async throws -> Int {
         Int(try await beginKey.withUnsafeBytes { beginKeyBytes in
                 endKey.withUnsafeBytes { endKeyBytes in
                     Future<ResultInt64>(
@@ -179,7 +179,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
             }.getAsync()?.value ?? 0)
     }
 
-    public func getRangeSplitPoints(beginKey: Fdb.Key, endKey: Fdb.Key, chunkSize: Int) async throws -> [[UInt8]] {
+    public func getRangeSplitPoints(beginKey: FDB.Key, endKey: FDB.Key, chunkSize: Int) async throws -> [[UInt8]] {
         try await beginKey.withUnsafeBytes { beginKeyBytes in
             endKey.withUnsafeBytes { endKeyBytes in
                 Future<ResultKeyArray>(
@@ -196,11 +196,11 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }.getAsync()?.value ?? []
     }
 
-    public func getCommittedVersion() throws -> Fdb.Version {
-        var version: Fdb.Version = 0
+    public func getCommittedVersion() throws -> FDB.Version {
+        var version: FDB.Version = 0
         let err = fdb_transaction_get_committed_version(transaction, &version)
         if err != 0 {
-            throw FdbError(code: err)
+            throw FDBError(code: err)
         }
         return version
     }
@@ -211,7 +211,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
             ).getAsync()?.value ?? 0)
     }
 
-    public func addConflictRange(beginKey: Fdb.Key, endKey: Fdb.Key, type: Fdb.ConflictRangeType) throws {
+    public func addConflictRange(beginKey: FDB.Key, endKey: FDB.Key, type: FDB.ConflictRangeType) throws {
         let error = beginKey.withUnsafeBytes { beginKeyBytes in
             endKey.withUnsafeBytes { endKeyBytes in
                 fdb_transaction_add_conflict_range(
@@ -226,12 +226,12 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
         }
 
         if error != 0 {
-            throw FdbError(code: error)
+            throw FDBError(code: error)
         }
     }
 
     public func getRange(
-        beginSelector: Fdb.KeySelector, endSelector: Fdb.KeySelector, limit: Int = 0,
+        beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, limit: Int = 0,
         snapshot: Bool
     ) async throws -> ResultRange {
         let future = beginSelector.key.withUnsafeBytes { beginKeyBytes in
@@ -262,7 +262,7 @@ public final class FdbTransaction: ITransaction, @unchecked Sendable {
     }
 
     public func getRange(
-        beginKey: Fdb.Key, endKey: Fdb.Key, limit: Int = 0, snapshot: Bool
+        beginKey: FDB.Key, endKey: FDB.Key, limit: Int = 0, snapshot: Bool
     ) async throws -> ResultRange {
         let future = beginKey.withUnsafeBytes { beginKeyBytes in
             endKey.withUnsafeBytes { endKeyBytes in

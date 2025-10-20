@@ -28,18 +28,18 @@ import CFoundationDB
 
 /// Singleton network manager for FoundationDB operations.
 ///
-/// `FdbNetwork` manages the FoundationDB network layer, including initialization,
+/// `FDBNetwork` manages the FoundationDB network layer, including initialization,
 /// network thread management, and network option configuration. It follows the
 /// singleton pattern to ensure only one network instance exists per process.
 ///
 /// ## Usage Example
 /// ```swift
-/// let network = FdbNetwork.shared
+/// let network = FDBNetwork.shared
 /// try network.initialize(version: 740)
 /// ```
-final class FdbNetwork: Sendable {
+final class FDBNetwork: Sendable {
     /// The shared singleton instance of the network manager.
-    static let shared = FdbNetwork()
+    static let shared = FDBNetwork()
 
     /// The pthread handle for the network thread.
     private let networkThread = Mutex<pthread_t?>(nil)
@@ -50,11 +50,11 @@ final class FdbNetwork: Sendable {
     /// selecting the API version, setting up the network, and starting the network thread.
     ///
     /// - Parameter version: The FoundationDB API version to use.
-    /// - Throws: `FdbError` if any step of initialization fails.
+    /// - Throws: `FDBError` if any step of initialization fails.
     func initialize(version: Int) throws {
         try networkThread.withLock { networkThread in
             if networkThread != nil {
-                throw FdbError(.networkError)
+                throw FDBError(.networkError)
             }
 
             try selectAPIVersion(Int32(version))
@@ -73,7 +73,7 @@ final class FdbNetwork: Sendable {
             // Call stop_network and wait for network thread to complete
             let error = fdb_stop_network()
             if error != 0 {
-                fatalError("Failed to stop network in deinit: \(FdbError(code: error).description)")
+                fatalError("Failed to stop network in deinit: \(FDBError(code: error).description)")
             }
 
             if let thread = networkThread {
@@ -92,8 +92,8 @@ final class FdbNetwork: Sendable {
     /// - Parameters:
     ///   - option: The network option to set.
     ///   - value: Optional byte array value for the option.
-    /// - Throws: `FdbError` if the option cannot be set.
-    func setNetworkOption(_ option: Fdb.NetworkOption, value: [UInt8]? = nil) throws {
+    /// - Throws: `FDBError` if the option cannot be set.
+    func setNetworkOption(_ option: FDB.NetworkOption, value: [UInt8]? = nil) throws {
         let error: Int32
         if let value = value {
             error = value.withUnsafeBytes { bytes in
@@ -108,7 +108,7 @@ final class FdbNetwork: Sendable {
         }
 
         if error != 0 {
-            throw FdbError(code: error)
+            throw FDBError(code: error)
         }
     }
 
@@ -117,8 +117,8 @@ final class FdbNetwork: Sendable {
     /// - Parameters:
     ///   - option: The network option to set.
     ///   - value: String value for the option (automatically converted to UTF-8 bytes).
-    /// - Throws: `FdbError` if the option cannot be set.
-    func setNetworkOption(_ option: Fdb.NetworkOption, value: String) throws {
+    /// - Throws: `FDBError` if the option cannot be set.
+    func setNetworkOption(_ option: FDB.NetworkOption, value: String) throws {
         try setNetworkOption(option, value: [UInt8](value.utf8))
     }
 
@@ -127,8 +127,8 @@ final class FdbNetwork: Sendable {
     /// - Parameters:
     ///   - option: The network option to set.
     ///   - value: Integer value for the option (automatically converted to 64-bit bytes).
-    /// - Throws: `FdbError` if the option cannot be set.
-    func setNetworkOption(_ option: Fdb.NetworkOption, value: Int) throws {
+    /// - Throws: `FDBError` if the option cannot be set.
+    func setNetworkOption(_ option: FDB.NetworkOption, value: Int) throws {
         let valueBytes = withUnsafeBytes(of: Int64(value)) { [UInt8]($0) }
         try setNetworkOption(option, value: valueBytes)
     }
@@ -136,11 +136,11 @@ final class FdbNetwork: Sendable {
     /// Selects the FoundationDB API version.
     ///
     /// - Parameter version: The API version to select.
-    /// - Throws: `FdbError` if the API version cannot be selected.
+    /// - Throws: `FDBError` if the API version cannot be selected.
     private func selectAPIVersion(_ version: Int32) throws {
         let error = fdb_select_api_version_impl(version, FDB_API_VERSION)
         if error != 0 {
-            throw FdbError(code: error)
+            throw FDBError(code: error)
         }
     }
 
@@ -148,11 +148,11 @@ final class FdbNetwork: Sendable {
     ///
     /// This method must be called before starting the network thread.
     ///
-    /// - Throws: `FdbError` if network setup fails or if already set up.
+    /// - Throws: `FDBError` if network setup fails or if already set up.
     private func setupNetwork() throws {
         let error = fdb_setup_network()
         if error != 0 {
-            throw FdbError(code: error)
+            throw FDBError(code: error)
         }
     }
 
@@ -165,13 +165,13 @@ final class FdbNetwork: Sendable {
         let result = pthread_create(&thread, nil, { _ in
             let error = fdb_run_network()
             if error != 0 {
-                fatalError("Network thread error: \(FdbError(code: error).description)")
+                fatalError("Network thread error: \(FDBError(code: error).description)")
             }
             return nil
         }, nil)
 
         if result != 0 {
-            throw FdbError(.networkError)
+            throw FDBError(.networkError)
         }
 
         return thread

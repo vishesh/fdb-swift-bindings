@@ -10,8 +10,8 @@ Swift bindings for FoundationDB, providing a native Swift API for interacting wi
 import FoundationDB
 
 // Initialize FoundationDB
-try await FdbClient.initialize()
-let database = try FdbClient.openDatabase()
+try await FDBClient.initialize()
+let database = try FDBClient.openDatabase()
 ```
 
 ### Basic Operations

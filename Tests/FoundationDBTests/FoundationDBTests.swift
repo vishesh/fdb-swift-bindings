@@ -22,7 +22,7 @@ import Testing
 
 @testable import FoundationDB
 
-extension FdbClient {
+extension FDBClient {
     static func maybeInitialize() async throws {
         if Self.isInitialized {
             return
@@ -45,8 +45,8 @@ extension String {
     }
 }
 
-extension ITransaction {
-    func getValue(for key: String, snapshot: Bool = false) async throws -> Fdb.Value? {
+extension TransactionProtocol {
+    func getValue(for key: String, snapshot: Bool = false) async throws -> FDB.Value? {
         let keyBytes = [UInt8](key.utf8)
         return try await getValue(for: keyBytes, snapshot: snapshot)
 
@@ -71,9 +71,9 @@ extension ITransaction {
 
     func readRange(
       beginKey: String, endKey: String, snapshot: Bool = false
-    ) -> Fdb.AsyncKVSequence {
-        let beginSelector = Fdb.KeySelector.firstGreaterOrEqual(beginKey)
-        let endSelector = Fdb.KeySelector.firstGreaterOrEqual(endKey)
+    ) -> FDB.AsyncKVSequence {
+        let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
+        let endSelector = FDB.KeySelector.firstGreaterOrEqual(endKey)
         return readRange(
           beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
@@ -90,7 +90,7 @@ extension ITransaction {
     }
 }
 
-extension Fdb.KeySelector {
+extension FDB.KeySelector {
     static func firstGreaterOrEqual(_ key: String) -> Self {
         return Self(key: [UInt8](key.utf8), orEqual: false, offset: 1)
     }    
@@ -111,8 +111,8 @@ extension Fdb.KeySelector {
 
 @Test("getValue test")
 func testGetValue() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -130,8 +130,8 @@ func testGetValue() async throws {
 
 @Test("setValue with byte arrays")
 func setValueBytes() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -139,8 +139,8 @@ func setValueBytes() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_byte_key".utf8)
-    let value: Fdb.Value = [UInt8]("test_byte_value".utf8)
+    let key: FDB.Key = [UInt8]("test_byte_key".utf8)
+    let value: FDB.Value = [UInt8]("test_byte_value".utf8)
 
     newTransaction.setValue(value, for: key)
 
@@ -150,8 +150,8 @@ func setValueBytes() async throws {
 
 @Test("setValue with strings")
 func setValueStrings() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -170,8 +170,8 @@ func setValueStrings() async throws {
 
 @Test("clear with byte arrays")
 func clearBytes() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -179,8 +179,8 @@ func clearBytes() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_clear_key".utf8)
-    let value: Fdb.Value = [UInt8]("test_clear_value".utf8)
+    let key: FDB.Key = [UInt8]("test_clear_key".utf8)
+    let value: FDB.Value = [UInt8]("test_clear_value".utf8)
 
     newTransaction.setValue(value, for: key)
     let retrievedValueBefore = try await newTransaction.getValue(for: key)
@@ -193,8 +193,8 @@ func clearBytes() async throws {
 
 @Test("clear with strings")
 func clearStrings() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -217,8 +217,8 @@ func clearStrings() async throws {
 
 @Test("clearRange with byte arrays")
 func clearRangeBytes() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -226,13 +226,13 @@ func clearRangeBytes() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key1: Fdb.Key = [UInt8]("test_range_key_a".utf8)
-    let key2: Fdb.Key = [UInt8]("test_range_key_b".utf8)
-    let key3: Fdb.Key = [UInt8]("test_range_key_c".utf8)
-    let value: Fdb.Value = [UInt8]("test_value".utf8)
+    let key1: FDB.Key = [UInt8]("test_range_key_a".utf8)
+    let key2: FDB.Key = [UInt8]("test_range_key_b".utf8)
+    let key3: FDB.Key = [UInt8]("test_range_key_c".utf8)
+    let value: FDB.Value = [UInt8]("test_value".utf8)
 
-    let beginKey: Fdb.Key = [UInt8]("test_range_key_a".utf8)
-    let endKey: Fdb.Key = [UInt8]("test_range_key_c".utf8)
+    let beginKey: FDB.Key = [UInt8]("test_range_key_a".utf8)
+    let endKey: FDB.Key = [UInt8]("test_range_key_c".utf8)
 
     newTransaction.setValue(value, for: key1)
     newTransaction.setValue(value, for: key2)
@@ -257,8 +257,8 @@ func clearRangeBytes() async throws {
 
 @Test("clearRange with strings")
 func clearRangeStrings() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -298,8 +298,8 @@ func clearRangeStrings() async throws {
 
 @Test("getKey with KeySelector")
 func getKeyWithKeySelector() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -315,7 +315,7 @@ func getKeyWithKeySelector() async throws {
 
     let readTransaction = try database.createTransaction()
     // Test getting key with KeySelector - firstGreaterOrEqual
-    let selector = Fdb.KeySelector.firstGreaterOrEqual("test_getkey_b")
+    let selector = FDB.KeySelector.firstGreaterOrEqual("test_getkey_b")
     let resultKey = try await readTransaction.getKey(selector: selector)
     let expectedKey = [UInt8]("test_getkey_b".utf8)
     #expect(resultKey == expectedKey, "getKey with KeySelector should find exact key")
@@ -323,8 +323,8 @@ func getKeyWithKeySelector() async throws {
 
 @Test("getKey with different KeySelector methods")
 func getKeyWithDifferentSelectors() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -340,32 +340,32 @@ func getKeyWithDifferentSelectors() async throws {
     let readTransaction = try database.createTransaction()
 
     // Test firstGreaterOrEqual
-    let selectorGTE = Fdb.KeySelector.firstGreaterOrEqual("test_selector_b")
+    let selectorGTE = FDB.KeySelector.firstGreaterOrEqual("test_selector_b")
     let resultGTE = try await readTransaction.getKey(selector: selectorGTE)
     #expect(
         resultGTE == [UInt8]("test_selector_b".utf8), "firstGreaterOrEqual should find exact key"
     )
 
     // Test firstGreaterThan
-    let selectorGT = Fdb.KeySelector.firstGreaterThan("test_selector_b")
+    let selectorGT = FDB.KeySelector.firstGreaterThan("test_selector_b")
     let resultGT = try await readTransaction.getKey(selector: selectorGT)
     #expect(resultGT == [UInt8]("test_selector_c".utf8), "firstGreaterThan should find next key")
 
     // Test lastLessOrEqual
-    let selectorLTE = Fdb.KeySelector.lastLessOrEqual("test_selector_b")
+    let selectorLTE = FDB.KeySelector.lastLessOrEqual("test_selector_b")
     let resultLTE = try await readTransaction.getKey(selector: selectorLTE)
     #expect(resultLTE == [UInt8]("test_selector_b".utf8), "lastLessOrEqual should find exact key")
 
     // Test lastLessThan
-    let selectorLT = Fdb.KeySelector.lastLessThan("test_selector_b")
+    let selectorLT = FDB.KeySelector.lastLessThan("test_selector_b")
     let resultLT = try await readTransaction.getKey(selector: selectorLT)
     #expect(resultLT == [UInt8]("test_selector_a".utf8), "lastLessThan should find previous key")
 }
 
 @Test("getKey with Selectable protocol")
 func getKeyWithSelectable() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -373,16 +373,16 @@ func getKeyWithSelectable() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_selectable_key".utf8)
-    let value: Fdb.Value = [UInt8]("test_selectable_value".utf8)
+    let key: FDB.Key = [UInt8]("test_selectable_key".utf8)
+    let value: FDB.Value = [UInt8]("test_selectable_value".utf8)
     newTransaction.setValue(value, for: key)
     _ = try await newTransaction.commit()
 
     let readTransaction = try database.createTransaction()
 
-    // Test with Fdb.Key (which implements Selectable)
+    // Test with FDB.Key (which implements Selectable)
     let resultWithKey = try await readTransaction.getKey(selector: key)
-    #expect(resultWithKey == key, "getKey with Fdb.Key should work")
+    #expect(resultWithKey == key, "getKey with FDB.Key should work")
 
     // Test with String (which implements Selectable)
     let stringKey = "test_selectable_key"
@@ -392,8 +392,8 @@ func getKeyWithSelectable() async throws {
 
 @Test("commit transaction")
 func testCommit() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -416,8 +416,8 @@ func testCommit() async throws {
 
 // @Test("getVersionstamp")
 // func testGetVersionstamp() async throws {
-//     try await FdbClient.maybeInitialize()
-//     let database = try FdbClient.openDatabase()
+//     try await FDBClient.maybeInitialize()
+//     let database = try FDBClient.openDatabase()
 //     let transaction = try database.createTransaction()
 
 //     // Clear test key range
@@ -433,8 +433,8 @@ func testCommit() async throws {
 
 @Test("cancel transaction")
 func testCancel() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -451,14 +451,14 @@ func testCancel() async throws {
         #expect(Bool(false), "Operations should fail after cancel")
     } catch {
         // Expected to throw an error
-        #expect(error is FdbError, "Should throw FdbError after cancel")
+        #expect(error is FDBError, "Should throw FDBError after cancel")
     }
 }
 
 @Test("setReadVersion and getReadVersion")
 func readVersion() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -474,8 +474,8 @@ func readVersion() async throws {
 
 @Test("read version with snapshot read")
 func readVersionSnapshot() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -495,8 +495,8 @@ func readVersionSnapshot() async throws {
 
 @Test("getRange with byte arrays")
 func getRangeBytes() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -505,12 +505,12 @@ func getRangeBytes() async throws {
 
     let newTransaction = try database.createTransaction()
     // Set up test data with byte arrays
-    let key1: Fdb.Key = [UInt8]("test_byte_range_001".utf8)
-    let key2: Fdb.Key = [UInt8]("test_byte_range_002".utf8)
-    let key3: Fdb.Key = [UInt8]("test_byte_range_003".utf8)
-    let value1: Fdb.Value = [UInt8]("byte_value1".utf8)
-    let value2: Fdb.Value = [UInt8]("byte_value2".utf8)
-    let value3: Fdb.Value = [UInt8]("byte_value3".utf8)
+    let key1: FDB.Key = [UInt8]("test_byte_range_001".utf8)
+    let key2: FDB.Key = [UInt8]("test_byte_range_002".utf8)
+    let key3: FDB.Key = [UInt8]("test_byte_range_003".utf8)
+    let value1: FDB.Value = [UInt8]("byte_value1".utf8)
+    let value2: FDB.Value = [UInt8]("byte_value2".utf8)
+    let value3: FDB.Value = [UInt8]("byte_value3".utf8)
 
     newTransaction.setValue(value1, for: key1)
     newTransaction.setValue(value2, for: key2)
@@ -519,8 +519,8 @@ func getRangeBytes() async throws {
 
     // Test range query with byte arrays
     let readTransaction = try database.createTransaction()
-    let beginKey: Fdb.Key = [UInt8]("test_byte_range_001".utf8)
-    let endKey: Fdb.Key = [UInt8]("test_byte_range_003".utf8)
+    let beginKey: FDB.Key = [UInt8]("test_byte_range_001".utf8)
+    let endKey: FDB.Key = [UInt8]("test_byte_range_003".utf8)
     let result = try await readTransaction.getRange(beginKey: beginKey, endKey: endKey)
 
     #expect(!result.more)
@@ -538,8 +538,8 @@ func getRangeBytes() async throws {
 
 @Test("getRange with limit")
 func getRangeWithLimit() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -581,8 +581,8 @@ func getRangeWithLimit() async throws {
 
 @Test("getRange empty range")
 func getRangeEmpty() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -602,8 +602,8 @@ func getRangeEmpty() async throws {
 
 @Test("getRange with KeySelectors - firstGreaterOrEqual")
 func getRangeWithKeySelectors() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -612,12 +612,12 @@ func getRangeWithKeySelectors() async throws {
 
     let newTransaction = try database.createTransaction()
     // Set up test data
-    let key1: Fdb.Key = [UInt8]("test_selector_001".utf8)
-    let key2: Fdb.Key = [UInt8]("test_selector_002".utf8)
-    let key3: Fdb.Key = [UInt8]("test_selector_003".utf8)
-    let value1: Fdb.Value = [UInt8]("selector_value1".utf8)
-    let value2: Fdb.Value = [UInt8]("selector_value2".utf8)
-    let value3: Fdb.Value = [UInt8]("selector_value3".utf8)
+    let key1: FDB.Key = [UInt8]("test_selector_001".utf8)
+    let key2: FDB.Key = [UInt8]("test_selector_002".utf8)
+    let key3: FDB.Key = [UInt8]("test_selector_003".utf8)
+    let value1: FDB.Value = [UInt8]("selector_value1".utf8)
+    let value2: FDB.Value = [UInt8]("selector_value2".utf8)
+    let value3: FDB.Value = [UInt8]("selector_value3".utf8)
 
     newTransaction.setValue(value1, for: key1)
     newTransaction.setValue(value2, for: key2)
@@ -626,8 +626,8 @@ func getRangeWithKeySelectors() async throws {
 
     // Test with KeySelectors using firstGreaterOrEqual
     let readTransaction = try database.createTransaction()
-    let beginSelector = Fdb.KeySelector.firstGreaterOrEqual(key1)
-    let endSelector = Fdb.KeySelector.firstGreaterOrEqual(key3)
+    let beginSelector = FDB.KeySelector.firstGreaterOrEqual(key1)
+    let endSelector = FDB.KeySelector.firstGreaterOrEqual(key3)
     let result = try await readTransaction.getRange(
         beginSelector: beginSelector, endSelector: endSelector
     )
@@ -647,8 +647,8 @@ func getRangeWithKeySelectors() async throws {
 
 @Test("getRange with KeySelectors - String keys")
 func getRangeWithStringSelectorKeys() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -664,8 +664,8 @@ func getRangeWithStringSelectorKeys() async throws {
 
     // Test with String-based KeySelectors
     let readTransaction = try database.createTransaction()
-    let beginSelector = Fdb.KeySelector.firstGreaterOrEqual("test_str_selector_001")
-    let endSelector = Fdb.KeySelector.firstGreaterOrEqual("test_str_selector_003")
+    let beginSelector = FDB.KeySelector.firstGreaterOrEqual("test_str_selector_001")
+    let endSelector = FDB.KeySelector.firstGreaterOrEqual("test_str_selector_003")
     let result = try await readTransaction.getRange(
         beginSelector: beginSelector, endSelector: endSelector
     )
@@ -684,8 +684,8 @@ func getRangeWithStringSelectorKeys() async throws {
 
 @Test("getRange with Selectable protocol - mixed types")
 func getRangeWithSelectable() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -701,7 +701,7 @@ func getRangeWithSelectable() async throws {
 
     // Test using the general Selectable protocol with mixed key types
     let readTransaction = try database.createTransaction()
-    let beginKey: Fdb.Key = [UInt8]("test_mixed_001".utf8)
+    let beginKey: FDB.Key = [UInt8]("test_mixed_001".utf8)
     let endString = "test_mixed_003"
     let result = try await readTransaction.getRange(begin: beginKey, end: endString)
 
@@ -715,8 +715,8 @@ func getRangeWithSelectable() async throws {
 
 @Test("KeySelector static methods with different offsets")
 func keySelectorMethods() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -733,9 +733,9 @@ func keySelectorMethods() async throws {
     let readTransaction = try database.createTransaction()
 
     // Test firstGreaterThan vs firstGreaterOrEqual
-    let beginSelectorGTE = Fdb.KeySelector.firstGreaterOrEqual("test_offset_002")
-    let beginSelectorGT = Fdb.KeySelector.firstGreaterThan("test_offset_002")
-    let endSelector = Fdb.KeySelector.firstGreaterOrEqual("test_offset_999")
+    let beginSelectorGTE = FDB.KeySelector.firstGreaterOrEqual("test_offset_002")
+    let beginSelectorGT = FDB.KeySelector.firstGreaterThan("test_offset_002")
+    let endSelector = FDB.KeySelector.firstGreaterOrEqual("test_offset_999")
 
     let resultGTE = try await readTransaction.getRange(
         beginSelector: beginSelectorGTE, endSelector: endSelector
@@ -756,8 +756,8 @@ func keySelectorMethods() async throws {
 
 @Test("withTransaction success")
 func withTransactionSuccess() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range first
     let clearTransaction = try database.createTransaction()
@@ -781,8 +781,8 @@ func withTransactionSuccess() async throws {
 
 @Test("withTransaction with exception in operation")
 func withTransactionException() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range first
     let clearTransaction = try database.createTransaction()
@@ -812,8 +812,8 @@ func withTransactionException() async throws {
 
 @Test("withTransaction with non-retryable error")
 func withTransactionNonRetryableError() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range first
     let clearTransaction = try database.createTransaction()
@@ -824,24 +824,24 @@ func withTransactionNonRetryableError() async throws {
         _ = try await database.withTransaction { transaction in
             transaction.setValue("non_retryable_value", for: "test_with_transaction_non_retryable")
             // Throw a non-retryable FDB error (transaction_cancelled)
-            throw FdbError(.transactionCancelled)
+            throw FDBError(.transactionCancelled)
         }
         #expect(Bool(false), "withTransaction should propagate non-retryable errors")
-    } catch let error as FdbError {
+    } catch let error as FDBError {
         #expect(
-            error.code == FdbErrorCode.transactionCancelled.rawValue,
-            "Should propagate the exact FdbError"
+            error.code == FDBErrorCode.transactionCancelled.rawValue,
+            "Should propagate the exact FDBError"
         )
         #expect(!error.isRetryable, "Error should be non-retryable")
     } catch {
-        #expect(Bool(false), "Should catch FdbError, got \(error)")
+        #expect(Bool(false), "Should catch FDBError, got \(error)")
     }
 }
 
 @Test("withTransaction returns value from operation")
 func withTransactionReturnValue() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range first
     let clearTransaction = try database.createTransaction()
@@ -870,8 +870,8 @@ func withTransactionReturnValue() async throws {
 
 @Test("withTransaction Sendable compliance")
 func withTransactionSendable() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range first
     let clearTransaction = try database.createTransaction()
@@ -893,42 +893,42 @@ func withTransactionSendable() async throws {
     #expect(result.name == "test", "Should return sendable struct with correct name")
 }
 
-@Test("FdbError isRetryable property")
+@Test("FDBError isRetryable property")
 func fdbErrorRetryable() {
     // Test retryable errors
-    let notCommittedError = FdbError(.notCommitted)
+    let notCommittedError = FDBError(.notCommitted)
     #expect(notCommittedError.isRetryable, "not_committed should be retryable")
 
-    let transactionTooOldError = FdbError(.transactionTooOld)
+    let transactionTooOldError = FDBError(.transactionTooOld)
     #expect(transactionTooOldError.isRetryable, "transaction_too_old should be retryable")
 
-    let futureVersionError = FdbError(.futureVersion)
+    let futureVersionError = FDBError(.futureVersion)
     #expect(futureVersionError.isRetryable, "future_version should be retryable")
 
-    let transactionTimedOutError = FdbError(.transactionTimedOut)
+    let transactionTimedOutError = FDBError(.transactionTimedOut)
     #expect(transactionTimedOutError.isRetryable, "transaction_timed_out should be retryable")
 
-    let processBehindError = FdbError(.processBehind)
+    let processBehindError = FDBError(.processBehind)
     #expect(processBehindError.isRetryable, "process_behind should be retryable")
 
-    let tagThrottledError = FdbError(.tagThrottled)
+    let tagThrottledError = FDBError(.tagThrottled)
     #expect(tagThrottledError.isRetryable, "tag_throttled should be retryable")
 
     // Test non-retryable errors
-    let transactionCancelledError = FdbError(.transactionCancelled)
+    let transactionCancelledError = FDBError(.transactionCancelled)
     #expect(!transactionCancelledError.isRetryable, "transaction_cancelled should not be retryable")
 
-    let unknownError = FdbError(.unknownError)
+    let unknownError = FDBError(.unknownError)
     #expect(!unknownError.isRetryable, "unknown error should not be retryable")
 
-    let internalError = FdbError(.internalError)
+    let internalError = FDBError(.internalError)
     #expect(!internalError.isRetryable, "internal_error should not be retryable")
 }
 
 @Test("atomic operation ADD")
 func atomicOpAdd() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -936,14 +936,14 @@ func atomicOpAdd() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_add".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_add".utf8)
 
     // Initial value: little-endian 64-bit integer 10
-    let initialValue: Fdb.Value = withUnsafeBytes(of: Int64(10).littleEndian) { Array($0) }
+    let initialValue: FDB.Value = withUnsafeBytes(of: Int64(10).littleEndian) { Array($0) }
     newTransaction.setValue(initialValue, for: key)
 
     // Add 5 using atomic operation
-    let addValue: Fdb.Value = withUnsafeBytes(of: Int64(5).littleEndian) { Array($0) }
+    let addValue: FDB.Value = withUnsafeBytes(of: Int64(5).littleEndian) { Array($0) }
     newTransaction.atomicOp(key: key, param: addValue, mutationType: .add)
 
     _ = try await newTransaction.commit()
@@ -959,8 +959,8 @@ func atomicOpAdd() async throws {
 
 @Test("atomic operation BIT_AND")
 func atomicOpBitAnd() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -968,14 +968,14 @@ func atomicOpBitAnd() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_and".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_and".utf8)
 
     // Initial value: 0xFF (255)
-    let initialValue: Fdb.Value = [0xFF]
+    let initialValue: FDB.Value = [0xFF]
     newTransaction.setValue(initialValue, for: key)
 
     // AND with 0x0F (15)
-    let andValue: Fdb.Value = [0x0F]
+    let andValue: FDB.Value = [0x0F]
     newTransaction.atomicOp(key: key, param: andValue, mutationType: .bitAnd)
 
     _ = try await newTransaction.commit()
@@ -990,8 +990,8 @@ func atomicOpBitAnd() async throws {
 
 @Test("atomic operation BIT_OR")
 func atomicOpBitOr() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -999,14 +999,14 @@ func atomicOpBitOr() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_or".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_or".utf8)
 
     // Initial value: 0x0F (15)
-    let initialValue: Fdb.Value = [0x0F]
+    let initialValue: FDB.Value = [0x0F]
     newTransaction.setValue(initialValue, for: key)
 
     // OR with 0xF0 (240)
-    let orValue: Fdb.Value = [0xF0]
+    let orValue: FDB.Value = [0xF0]
     newTransaction.atomicOp(key: key, param: orValue, mutationType: .bitOr)
 
     _ = try await newTransaction.commit()
@@ -1021,8 +1021,8 @@ func atomicOpBitOr() async throws {
 
 @Test("atomic operation BIT_XOR")
 func atomicOpBitXor() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1030,14 +1030,14 @@ func atomicOpBitXor() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_xor".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_xor".utf8)
 
     // Initial value: 0xFF (255)
-    let initialValue: Fdb.Value = [0xFF]
+    let initialValue: FDB.Value = [0xFF]
     newTransaction.setValue(initialValue, for: key)
 
     // XOR with 0x0F (15)
-    let xorValue: Fdb.Value = [0x0F]
+    let xorValue: FDB.Value = [0x0F]
     newTransaction.atomicOp(key: key, param: xorValue, mutationType: .bitXor)
 
     _ = try await newTransaction.commit()
@@ -1052,8 +1052,8 @@ func atomicOpBitXor() async throws {
 
 @Test("atomic operation MAX")
 func atomicOpMax() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1061,14 +1061,14 @@ func atomicOpMax() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_max".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_max".utf8)
 
     // Initial value: little-endian 64-bit integer 10
-    let initialValue: Fdb.Value = withUnsafeBytes(of: Int64(10).littleEndian) { Array($0) }
+    let initialValue: FDB.Value = withUnsafeBytes(of: Int64(10).littleEndian) { Array($0) }
     newTransaction.setValue(initialValue, for: key)
 
     // Max with 15
-    let maxValue: Fdb.Value = withUnsafeBytes(of: Int64(15).littleEndian) { Array($0) }
+    let maxValue: FDB.Value = withUnsafeBytes(of: Int64(15).littleEndian) { Array($0) }
     newTransaction.atomicOp(key: key, param: maxValue, mutationType: .max)
 
     _ = try await newTransaction.commit()
@@ -1084,8 +1084,8 @@ func atomicOpMax() async throws {
 
 @Test("atomic operation MIN")
 func atomicOpMin() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1093,14 +1093,14 @@ func atomicOpMin() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_min".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_min".utf8)
 
     // Initial value: little-endian 64-bit integer 10
-    let initialValue: Fdb.Value = withUnsafeBytes(of: Int64(10).littleEndian) { Array($0) }
+    let initialValue: FDB.Value = withUnsafeBytes(of: Int64(10).littleEndian) { Array($0) }
     newTransaction.setValue(initialValue, for: key)
 
     // Min with 5
-    let minValue: Fdb.Value = withUnsafeBytes(of: Int64(5).littleEndian) { Array($0) }
+    let minValue: FDB.Value = withUnsafeBytes(of: Int64(5).littleEndian) { Array($0) }
     newTransaction.atomicOp(key: key, param: minValue, mutationType: .min)
 
     _ = try await newTransaction.commit()
@@ -1116,8 +1116,8 @@ func atomicOpMin() async throws {
 
 @Test("atomic operation APPEND_IF_FITS")
 func atomicOpAppendIfFits() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1125,14 +1125,14 @@ func atomicOpAppendIfFits() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_append".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_append".utf8)
 
     // Initial value: "Hello"
-    let initialValue: Fdb.Value = [UInt8]("Hello".utf8)
+    let initialValue: FDB.Value = [UInt8]("Hello".utf8)
     newTransaction.setValue(initialValue, for: key)
 
     // Append " World"
-    let appendValue: Fdb.Value = [UInt8](" World".utf8)
+    let appendValue: FDB.Value = [UInt8](" World".utf8)
     newTransaction.atomicOp(key: key, param: appendValue, mutationType: .appendIfFits)
 
     _ = try await newTransaction.commit()
@@ -1148,8 +1148,8 @@ func atomicOpAppendIfFits() async throws {
 
 @Test("atomic operation BYTE_MIN")
 func atomicOpByteMin() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1157,14 +1157,14 @@ func atomicOpByteMin() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_byte_min".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_byte_min".utf8)
 
     // Initial value: "zebra"
-    let initialValue: Fdb.Value = [UInt8]("zebra".utf8)
+    let initialValue: FDB.Value = [UInt8]("zebra".utf8)
     newTransaction.setValue(initialValue, for: key)
 
     // Compare with "apple" (lexicographically smaller)
-    let compareValue: Fdb.Value = [UInt8]("apple".utf8)
+    let compareValue: FDB.Value = [UInt8]("apple".utf8)
     newTransaction.atomicOp(key: key, param: compareValue, mutationType: .byteMin)
 
     _ = try await newTransaction.commit()
@@ -1180,8 +1180,8 @@ func atomicOpByteMin() async throws {
 
 @Test("atomic operation BYTE_MAX")
 func atomicOpByteMax() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1189,14 +1189,14 @@ func atomicOpByteMax() async throws {
     _ = try await transaction.commit()
 
     let newTransaction = try database.createTransaction()
-    let key: Fdb.Key = [UInt8]("test_atomic_byte_max".utf8)
+    let key: FDB.Key = [UInt8]("test_atomic_byte_max".utf8)
 
     // Initial value: "apple"
-    let initialValue: Fdb.Value = [UInt8]("apple".utf8)
+    let initialValue: FDB.Value = [UInt8]("apple".utf8)
     newTransaction.setValue(initialValue, for: key)
 
     // Compare with "zebra" (lexicographically larger)
-    let compareValue: Fdb.Value = [UInt8]("zebra".utf8)
+    let compareValue: FDB.Value = [UInt8]("zebra".utf8)
     newTransaction.atomicOp(key: key, param: compareValue, mutationType: .byteMax)
 
     _ = try await newTransaction.commit()
@@ -1213,21 +1213,21 @@ func atomicOpByteMax() async throws {
 @Test("network option enum values")
 func networkOptionEnumValues() {
     // Test that network option enum has expected values
-    #expect(Fdb.NetworkOption.traceEnable.rawValue == 30, "traceEnable should have value 30")
-    #expect(Fdb.NetworkOption.traceRollSize.rawValue == 31, "traceRollSize should have value 31")
+    #expect(FDB.NetworkOption.traceEnable.rawValue == 30, "traceEnable should have value 30")
+    #expect(FDB.NetworkOption.traceRollSize.rawValue == 31, "traceRollSize should have value 31")
     #expect(
-        Fdb.NetworkOption.traceMaxLogsSize.rawValue == 32, "traceMaxLogsSize should have value 32"
+        FDB.NetworkOption.traceMaxLogsSize.rawValue == 32, "traceMaxLogsSize should have value 32"
     )
-    #expect(Fdb.NetworkOption.traceLogGroup.rawValue == 33, "traceLogGroup should have value 33")
-    #expect(Fdb.NetworkOption.traceFormat.rawValue == 34, "traceFormat should have value 34")
-    #expect(Fdb.NetworkOption.knob.rawValue == 40, "knob should have value 40")
-    #expect(Fdb.NetworkOption.tlsCertPath.rawValue == 43, "tlsCertPath should have value 43")
-    #expect(Fdb.NetworkOption.tlsKeyPath.rawValue == 46, "tlsKeyPath should have value 46")
+    #expect(FDB.NetworkOption.traceLogGroup.rawValue == 33, "traceLogGroup should have value 33")
+    #expect(FDB.NetworkOption.traceFormat.rawValue == 34, "traceFormat should have value 34")
+    #expect(FDB.NetworkOption.knob.rawValue == 40, "knob should have value 40")
+    #expect(FDB.NetworkOption.tlsCertPath.rawValue == 43, "tlsCertPath should have value 43")
+    #expect(FDB.NetworkOption.tlsKeyPath.rawValue == 46, "tlsKeyPath should have value 46")
     #expect(
-        Fdb.NetworkOption.disableClientStatisticsLogging.rawValue == 70,
+        FDB.NetworkOption.disableClientStatisticsLogging.rawValue == 70,
         "disableClientStatisticsLogging should have value 70"
     )
-    #expect(Fdb.NetworkOption.clientTmpDir.rawValue == 91, "clientTmpDir should have value 91")
+    #expect(FDB.NetworkOption.clientTmpDir.rawValue == 91, "clientTmpDir should have value 91")
 }
 
 @Test("network option convenience methods - method validation")
@@ -1236,17 +1236,17 @@ func networkOptionConvenienceMethods() throws {
     // Note: These tests verify the API exists but don't actually set options
 
     // Test trace methods
-    // FdbClient.enableTrace(directory: "/tmp/test") - would set trace
-    // FdbClient.setTraceRollSize(1048576) - would set roll size
-    // FdbClient.setTraceLogGroup("test") - would set log group
-    // FdbClient.setTraceFormat("json") - would set format
+    // FDBClient.enableTrace(directory: "/tmp/test") - would set trace
+    // FDBClient.setTraceRollSize(1048576) - would set roll size
+    // FDBClient.setTraceLogGroup("test") - would set log group
+    // FDBClient.setTraceFormat("json") - would set format
 
     // Test configuration methods
-    // FdbClient.setKnob("test=1") - would set knob
-    // FdbClient.setTLSCertPath("/tmp/cert.pem") - would set TLS cert
-    // FdbClient.setTLSKeyPath("/tmp/key.pem") - would set TLS key
-    // FdbClient.setClientTempDirectory("/tmp") - would set temp dir
-    // FdbClient.disableClientStatisticsLogging() - would disable stats
+    // FDBClient.setKnob("test=1") - would set knob
+    // FDBClient.setTLSCertPath("/tmp/cert.pem") - would set TLS cert
+    // FDBClient.setTLSKeyPath("/tmp/key.pem") - would set TLS key
+    // FDBClient.setClientTempDirectory("/tmp") - would set temp dir
+    // FDBClient.disableClientStatisticsLogging() - would disable stats
 
     // If we get here, the convenience method signatures are correct
     let methodsExist = true
@@ -1255,8 +1255,8 @@ func networkOptionConvenienceMethods() throws {
 
 @Test("transaction option with timeout enforcement")
 func transactionTimeoutOption() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1278,14 +1278,14 @@ func transactionTimeoutOption() async throws {
         // This is not necessarily a failure as the operation might complete within 1ms
     } catch {
         // Expected to timeout - this is normal behavior
-        #expect(error is FdbError, "Should throw FdbError on timeout")
+        #expect(error is FDBError, "Should throw FDBError on timeout")
     }
 }
 
 @Test("transaction option with size limit")
 func transactionSizeLimitOption() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1306,7 +1306,7 @@ func transactionSizeLimitOption() async throws {
         // If successful, the transaction was small enough or size limit wasn't enforced yet
     } catch {
         // Expected to fail due to size limit
-        #expect(error is FdbError, "Should throw FdbError when size limit exceeded")
+        #expect(error is FDBError, "Should throw FDBError when size limit exceeded")
     }
 }
 
@@ -1359,8 +1359,8 @@ func transactionOptionConvenienceMethods() throws {
 
 @Test("readRange with KeySelectors - basic functionality")
 func readRangeWithKeySelectors() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1378,8 +1378,8 @@ func readRangeWithKeySelectors() async throws {
 
     // Test readRange method with limited results to trigger pre-fetching
     let readTransaction = try database.createTransaction()
-    let beginSelector = Fdb.KeySelector.firstGreaterOrEqual("test_read_range_015")
-    let endSelector = Fdb.KeySelector.firstGreaterOrEqual("test_read_range_032")
+    let beginSelector = FDB.KeySelector.firstGreaterOrEqual("test_read_range_015")
+    let endSelector = FDB.KeySelector.firstGreaterOrEqual("test_read_range_032")
 
     let asyncSequence = readTransaction.readRange(
         beginSelector: beginSelector, endSelector: endSelector
@@ -1409,8 +1409,8 @@ func readRangeWithKeySelectors() async throws {
 
 @Test("readRange with AsyncIterator - comprehensive pre-fetching test")
 func readRangeAsyncIteratorPrefetch() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Clear test key range
@@ -1428,8 +1428,8 @@ func readRangeAsyncIteratorPrefetch() async throws {
 
     // Test with small limit to force multiple batches and pre-fetching
     let readTransaction = try database.createTransaction()
-    let beginSelector = Fdb.KeySelector.firstGreaterOrEqual("test_async_iter_020")
-    let endSelector = Fdb.KeySelector.firstGreaterOrEqual("test_async_iter_080")
+    let beginSelector = FDB.KeySelector.firstGreaterOrEqual("test_async_iter_020")
+    let endSelector = FDB.KeySelector.firstGreaterOrEqual("test_async_iter_080")
 
     let asyncSequence = readTransaction.readRange(
         beginSelector: beginSelector, endSelector: endSelector
@@ -1472,8 +1472,8 @@ extension String {
 
 @Test("getEstimatedRangeSizeBytes returns size estimate")
 func testGetEstimatedRangeSizeBytes() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Write some test data
     try await database.withTransaction { transaction in
@@ -1488,8 +1488,8 @@ func testGetEstimatedRangeSizeBytes() async throws {
 
     // Get estimated size
     let transaction = try database.createTransaction()
-    let beginKey: Fdb.Key = Array("test_size_".utf8)
-    let endKey: Fdb.Key = Array("test_size`".utf8)
+    let beginKey: FDB.Key = Array("test_size_".utf8)
+    let endKey: FDB.Key = Array("test_size`".utf8)
     let estimatedSize = try await transaction.getEstimatedRangeSizeBytes(beginKey: beginKey, endKey: endKey)
 
     // Size should be positive (may not be exact due to sampling)
@@ -1498,8 +1498,8 @@ func testGetEstimatedRangeSizeBytes() async throws {
 
 @Test("getRangeSplitPoints returns split keys")
 func testGetRangeSplitPoints() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Write some test data
     try await database.withTransaction { transaction in
@@ -1514,8 +1514,8 @@ func testGetRangeSplitPoints() async throws {
 
     // Get split points with 10KB chunks
     let transaction = try database.createTransaction()
-    let beginKey: Fdb.Key = Array("test_split_".utf8)
-    let endKey: Fdb.Key = Array("test_split`".utf8)
+    let beginKey: FDB.Key = Array("test_split_".utf8)
+    let endKey: FDB.Key = Array("test_split`".utf8)
     let splitPoints = try await transaction.getRangeSplitPoints(
         beginKey: beginKey,
         endKey: endKey,
@@ -1530,8 +1530,8 @@ func testGetRangeSplitPoints() async throws {
 
 @Test("getCommittedVersion returns version after commit")
 func testGetCommittedVersion() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     transaction.setValue("test_value", for: "test_version_key")
@@ -1543,8 +1543,8 @@ func testGetCommittedVersion() async throws {
 
 @Test("getCommittedVersion returns -1 for read-only transaction")
 func testGetCommittedVersionReadOnly() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Read-only transaction
@@ -1557,8 +1557,8 @@ func testGetCommittedVersionReadOnly() async throws {
 
 @Test("getApproximateSize returns transaction size")
 func testGetApproximateSize() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
 
     // Initial size
@@ -1579,8 +1579,8 @@ func testGetApproximateSize() async throws {
 
 @Test("addConflictRange read conflict")
 func testAddReadConflictRange() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range
     let clearTransaction = try database.createTransaction()
@@ -1594,8 +1594,8 @@ func testAddReadConflictRange() async throws {
 
     // Test adding read conflict range
     let transaction = try database.createTransaction()
-    let beginKey: Fdb.Key = Array("test_conflict_a".utf8)
-    let endKey: Fdb.Key = Array("test_conflict_b".utf8)
+    let beginKey: FDB.Key = Array("test_conflict_a".utf8)
+    let endKey: FDB.Key = Array("test_conflict_b".utf8)
 
     // Add read conflict range - should succeed
     try transaction.addConflictRange(beginKey: beginKey, endKey: endKey, type: .read)
@@ -1607,8 +1607,8 @@ func testAddReadConflictRange() async throws {
 
 @Test("addConflictRange write conflict")
 func testAddWriteConflictRange() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range
     let clearTransaction = try database.createTransaction()
@@ -1617,8 +1617,8 @@ func testAddWriteConflictRange() async throws {
 
     // Test adding write conflict range
     let transaction = try database.createTransaction()
-    let beginKey: Fdb.Key = Array("test_write_conflict_a".utf8)
-    let endKey: Fdb.Key = Array("test_write_conflict_b".utf8)
+    let beginKey: FDB.Key = Array("test_write_conflict_a".utf8)
+    let endKey: FDB.Key = Array("test_write_conflict_b".utf8)
 
     // Add write conflict range - should succeed
     try transaction.addConflictRange(beginKey: beginKey, endKey: endKey, type: .write)
@@ -1630,8 +1630,8 @@ func testAddWriteConflictRange() async throws {
 
 @Test("addConflictRange detects concurrent write conflicts")
 func testConflictRangeDetectsConcurrentWrites() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range
     let clearTransaction = try database.createTransaction()
@@ -1645,8 +1645,8 @@ func testConflictRangeDetectsConcurrentWrites() async throws {
 
     // Create first transaction and add a write conflict range
     let transaction1 = try database.createTransaction()
-    let beginKey: Fdb.Key = Array("test_concurrent_key".utf8)
-    var endKey: Fdb.Key = beginKey
+    let beginKey: FDB.Key = Array("test_concurrent_key".utf8)
+    var endKey: FDB.Key = beginKey
     endKey.append(0x00)
 
     try transaction1.addConflictRange(beginKey: beginKey, endKey: endKey, type: .write)
@@ -1660,7 +1660,7 @@ func testConflictRangeDetectsConcurrentWrites() async throws {
     do {
         _ = try await transaction1.commit()
         // If it succeeds, that's also acceptable behavior
-    } catch let error as FdbError {
+    } catch let error as FDBError {
         // Expected to fail with a conflict error (not_committed)
         #expect(error.isRetryable, "Conflict should be a retryable error")
     }
@@ -1668,8 +1668,8 @@ func testConflictRangeDetectsConcurrentWrites() async throws {
 
 @Test("addConflictRange multiple ranges")
 func testAddMultipleConflictRanges() async throws {
-    try await FdbClient.maybeInitialize()
-    let database = try FdbClient.openDatabase()
+    try await FDBClient.maybeInitialize()
+    let database = try FDBClient.openDatabase()
 
     // Clear test key range
     let clearTransaction = try database.createTransaction()
@@ -1680,17 +1680,17 @@ func testAddMultipleConflictRanges() async throws {
     let transaction = try database.createTransaction()
 
     // Add multiple read conflict ranges
-    let beginKey1: Fdb.Key = Array("test_multi_a".utf8)
-    let endKey1: Fdb.Key = Array("test_multi_b".utf8)
+    let beginKey1: FDB.Key = Array("test_multi_a".utf8)
+    let endKey1: FDB.Key = Array("test_multi_b".utf8)
     try transaction.addConflictRange(beginKey: beginKey1, endKey: endKey1, type: .read)
 
-    let beginKey2: Fdb.Key = Array("test_multi_c".utf8)
-    let endKey2: Fdb.Key = Array("test_multi_d".utf8)
+    let beginKey2: FDB.Key = Array("test_multi_c".utf8)
+    let endKey2: FDB.Key = Array("test_multi_d".utf8)
     try transaction.addConflictRange(beginKey: beginKey2, endKey: endKey2, type: .read)
 
     // Add write conflict range
-    let beginKey3: Fdb.Key = Array("test_multi_x".utf8)
-    let endKey3: Fdb.Key = Array("test_multi_y".utf8)
+    let beginKey3: FDB.Key = Array("test_multi_x".utf8)
+    let endKey3: FDB.Key = Array("test_multi_y".utf8)
     try transaction.addConflictRange(beginKey: beginKey3, endKey: endKey3, type: .write)
 
     // Should be able to commit with multiple conflict ranges
@@ -1701,6 +1701,6 @@ func testAddMultipleConflictRanges() async throws {
 @Test("ConflictRangeType enum values")
 func testConflictRangeTypeValues() {
     // Test that conflict range type enum has expected values
-    #expect(Fdb.ConflictRangeType.read.rawValue == 0, "read should have value 0")
-    #expect(Fdb.ConflictRangeType.write.rawValue == 1, "write should have value 1")
+    #expect(FDB.ConflictRangeType.read.rawValue == 0, "read should have value 0")
+    #expect(FDB.ConflictRangeType.write.rawValue == 1, "write should have value 1")
 }

@@ -21,16 +21,16 @@ import CFoundationDB
 
 /// A FoundationDB database connection.
 ///
-/// `FdbDatabase` represents a connection to a FoundationDB database and implements
-/// the `IDatabase` protocol. It provides transaction creation capabilities and
+/// `FDBDatabase` represents a connection to a FoundationDB database and implements
+/// the `DatabaseProtocol` protocol. It provides transaction creation capabilities and
 /// automatically manages the underlying database connection resource.
 ///
 /// ## Usage Example
 /// ```swift
-/// let database = try FdbClient.openDatabase()
+/// let database = try FDBClient.openDatabase()
 /// let transaction = try database.createTransaction()
 /// ```
-final public class FdbDatabase: IDatabase {
+final public class FDBDatabase: DatabaseProtocol {
     /// The underlying FoundationDB database pointer.
     private let database: OpaquePointer
 
@@ -51,20 +51,20 @@ final public class FdbDatabase: IDatabase {
     /// Creates and returns a new transaction that can be used to perform
     /// read and write operations on the database.
     ///
-    /// - Returns: A new transaction instance conforming to `ITransaction`.
-    /// - Throws: `FdbError` if the transaction cannot be created.
-    public func createTransaction() throws -> any ITransaction {
+    /// - Returns: A new transaction instance conforming to `TransactionProtocol`.
+    /// - Throws: `FDBError` if the transaction cannot be created.
+    public func createTransaction() throws -> any TransactionProtocol {
         var transaction: OpaquePointer?
         let error = fdb_database_create_transaction(database, &transaction)
         if error != 0 {
-            throw FdbError(code: error)
+            throw FDBError(code: error)
         }
 
         guard let tr = transaction else {
-            throw FdbError(.internalError)
+            throw FDBError(.internalError)
         }
 
-        return FdbTransaction(transaction: tr)
+        return FDBTransaction(transaction: tr)
     }
 
     /// Sets a database option with a byte array value.
@@ -72,8 +72,8 @@ final public class FdbDatabase: IDatabase {
     /// - Parameters:
     ///   - option: The database option to set.
     ///   - value: The value for the option (optional).
-    /// - Throws: `FdbError` if the option cannot be set.
-    public func setOption(_ option: Fdb.DatabaseOption, value: Fdb.Value? = nil) throws {
+    /// - Throws: `FDBError` if the option cannot be set.
+    public func setOption(_ option: FDB.DatabaseOption, value: FDB.Value? = nil) throws {
         let error: Int32
         if let value = value {
             error = value.withUnsafeBytes { bytes in
@@ -89,7 +89,7 @@ final public class FdbDatabase: IDatabase {
         }
 
         if error != 0 {
-            throw FdbError(code: error)
+            throw FDBError(code: error)
         }
     }
 
@@ -98,8 +98,8 @@ final public class FdbDatabase: IDatabase {
     /// - Parameters:
     ///   - option: The database option to set.
     ///   - value: The string value for the option.
-    /// - Throws: `FdbError` if the option cannot be set.
-    public func setOption(_ option: Fdb.DatabaseOption, value: String) throws {
+    /// - Throws: `FDBError` if the option cannot be set.
+    public func setOption(_ option: FDB.DatabaseOption, value: String) throws {
         try setOption(option, value: Array(value.utf8))
     }
 
@@ -108,8 +108,8 @@ final public class FdbDatabase: IDatabase {
     /// - Parameters:
     ///   - option: The database option to set.
     ///   - value: The integer value for the option.
-    /// - Throws: `FdbError` if the option cannot be set.
-    public func setOption(_ option: Fdb.DatabaseOption, value: Int) throws {
+    /// - Throws: `FDBError` if the option cannot be set.
+    public func setOption(_ option: FDB.DatabaseOption, value: Int) throws {
         var val = Int64(value).littleEndian
         try withUnsafeBytes(of: &val) { bytes in
             try setOption(option, value: Array(bytes))
