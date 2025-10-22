@@ -158,7 +158,7 @@ public final class FDBTransaction: TransactionProtocol, @unchecked Sendable {
     }
 
     public func onError(_ error: FDBError) async throws {
-        try await Future<ResultVoid>(
+        _ = try await Future<ResultVoid>(
             fdb_transaction_on_error(transaction, error.code)
         ).getAsync()
     }
