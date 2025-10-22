@@ -31,7 +31,7 @@ func testTupleNil() throws {
 
     var offset = 1
     let decoded = try TupleNil.decodeTuple(from: encoded, at: &offset)
-    #expect(decoded is TupleNil, "Should decode back to TupleNil")
+    #expect(type(of: decoded) == TupleNil.self, "Should decode back to TupleNil")
     #expect(offset == 1, "Offset should not advance for TupleNil")
 }
 
