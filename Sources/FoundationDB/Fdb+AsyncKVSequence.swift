@@ -228,7 +228,7 @@ extension FDB {
             private mutating func startBackgroundPreFetch() {
                 preFetchTask = Task {
                     [transaction, nextBeginSelector, endSelector, batchLimit, snapshot] in
-                    return try await transaction.getRange(
+                    return try await transaction.getRangeNative(
                         beginSelector: nextBeginSelector,
                         endSelector: endSelector,
                         limit: batchLimit,

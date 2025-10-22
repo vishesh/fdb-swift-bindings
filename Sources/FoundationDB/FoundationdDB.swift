@@ -24,12 +24,14 @@
 /// and transaction retry logic. Implementations handle the underlying database
 /// connection and resource management.
 /// Database interface for FoundationDB operations
-public protocol DatabaseProtocol {
+protocol DatabaseProtocol {
+    associatedtype Transaction: TransactionProtocol
+
     /// Creates a new transaction for database operations.
     ///
     /// - Returns: A new transaction instance conforming to `TransactionProtocol`.
     /// - Throws: `FDBError` if the transaction cannot be created.
-    func createTransaction() throws -> any TransactionProtocol
+    func createTransaction() throws -> Transaction
 
     /// Executes a transaction with automatic retry logic.
     ///
@@ -50,7 +52,7 @@ public protocol DatabaseProtocol {
 /// a FoundationDB transaction, including reads, writes, atomic operations,
 /// and transaction management.
 /// Transaction interface for FoundationDB operations
-public protocol TransactionProtocol: Sendable {
+protocol TransactionProtocol: Sendable {
     /// Retrieves a value for the given key.
     ///
     /// - Parameters:
@@ -108,19 +110,6 @@ public protocol TransactionProtocol: Sendable {
         beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool
     ) -> FDB.AsyncKVSequence
 
-    /// Retrieves key-value pairs within a range using selectable endpoints.
-    ///
-    /// - Parameters:
-    ///   - begin: The start of the range (converted to key selector).
-    ///   - end: The end of the range (converted to key selector).
-    ///   - limit: Maximum number of key-value pairs to return (0 for no limit).
-    ///   - snapshot: Whether to perform a snapshot read.
-    /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
-    /// - Throws: `FDBError` if the operation fails.
-    func getRange(
-        begin: FDB.Selectable, end: FDB.Selectable, limit: Int, snapshot: Bool
-    ) async throws -> ResultRange
-
     /// Retrieves key-value pairs within a range using key selectors.
     ///
     /// - Parameters:
@@ -130,7 +119,7 @@ public protocol TransactionProtocol: Sendable {
     ///   - snapshot: Whether to perform a snapshot read.
     /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
     /// - Throws: `FDBError` if the operation fails.
-    func getRange(
+    func getRangeNative(
         beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, limit: Int, snapshot: Bool
     ) async throws -> ResultRange
 
@@ -143,7 +132,7 @@ public protocol TransactionProtocol: Sendable {
     ///   - snapshot: Whether to perform a snapshot read.
     /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
     /// - Throws: `FDBError` if the operation fails.
-    func getRange(
+    func getRangeNative(
         beginKey: FDB.Key, endKey: FDB.Key, limit: Int, snapshot: Bool
     ) async throws -> ResultRange
 
@@ -271,8 +260,8 @@ public protocol TransactionProtocol: Sendable {
     ///   - value: Integer value for the option.
     ///   - option: The transaction option to set.
     /// - Throws: `FDBError` if the option cannot be set.
-    func setOption(to value: Int, forOption option: FDB.TransactionOption) throws
-}
+    func setOption(to value: Int, forOption option: FDB.TransactionOption) throws}
+
 
 /// Default implementation of transaction retry logic for `DatabaseProtocol`.
 extension DatabaseProtocol {
@@ -318,92 +307,76 @@ extension DatabaseProtocol {
 }
 
 extension TransactionProtocol {
- public func getValue(for key: FDB.Key, snapshot: Bool = false) async throws -> FDB.Value? {
+    public func getValue(for key: FDB.Key, snapshot: Bool = false) async throws -> FDB.Value? {
         try await getValue(for: key, snapshot: snapshot)
     }
 
- public func getKey(selector: FDB.Selectable, snapshot: Bool = false) async throws -> FDB.Key? {
+    public func getKey(selector: FDB.Selectable, snapshot: Bool = false) async throws -> FDB.Key? {
         try await getKey(selector: selector.toKeySelector(), snapshot: snapshot)
     }
 
- public func getKey(selector: FDB.KeySelector, snapshot: Bool = false) async throws -> FDB.Key? {
+    public func getKey(selector: FDB.KeySelector, snapshot: Bool = false) async throws -> FDB.Key? {
         try await getKey(selector: selector, snapshot: snapshot)
     }
 
- public func readRange(
-        beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool = false
+    public func readRange(
+      beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         FDB.AsyncKVSequence(
-            transaction: self,
-            beginSelector: beginSelector,
-            endSelector: endSelector,
-            snapshot: snapshot
+          transaction: self,
+          beginSelector: beginSelector,
+          endSelector: endSelector,
+          snapshot: snapshot
         )
     }
 
- public func readRange(
-        beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector
+    public func readRange(
+      beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector
     ) -> FDB.AsyncKVSequence {
         readRange(
-            beginSelector: beginSelector, endSelector: endSelector, snapshot: false
+          beginSelector: beginSelector, endSelector: endSelector, snapshot: false
         )
     }
 
- public func readRange(
-        begin: FDB.Selectable, end: FDB.Selectable, snapshot: Bool = false
+    public func readRange(
+      begin: FDB.Selectable, end: FDB.Selectable, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = begin.toKeySelector()
         let endSelector = end.toKeySelector()
         return readRange(
-            beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
+          beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
 
- public func readRange(
-        beginKey: FDB.Key, endKey: FDB.Key, snapshot: Bool = false
+    public func readRange(
+      beginKey: FDB.Key, endKey: FDB.Key, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
         let endSelector = FDB.KeySelector.firstGreaterOrEqual(endKey)
         return readRange(
-            beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
+          beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
 
- public func getRange(
-        begin: FDB.Selectable, end: FDB.Selectable, limit: Int = 0, snapshot: Bool = false
+    func getRangeNative(
+      beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, limit: Int = 0,
+      snapshot: Bool = false
     ) async throws -> ResultRange {
-        let beginSelector = begin.toKeySelector()
-        let endSelector = end.toKeySelector()
-        return try await getRange(
-            beginSelector: beginSelector, endSelector: endSelector, limit: limit, snapshot: snapshot
+        try await getRangeNative(
+          beginSelector: beginSelector, endSelector: endSelector, limit: limit, snapshot: snapshot
         )
     }
 
- public func getRange(
-        beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, limit: Int = 0,
-        snapshot: Bool = false
-    ) async throws -> ResultRange {
-        try await getRange(
-            beginSelector: beginSelector, endSelector: endSelector, limit: limit, snapshot: snapshot
-        )
-    }
-
- public func getRange(
-        beginKey: FDB.Key, endKey: FDB.Key, limit: Int = 0, snapshot: Bool = false
-    ) async throws -> ResultRange {
-        try await getRange(beginKey: beginKey, endKey: endKey, limit: limit, snapshot: snapshot)
-    }
-
- public func setOption(forOption option: FDB.TransactionOption) throws {
+    public func setOption(forOption option: FDB.TransactionOption) throws {
         try setOption(to: nil, forOption: option)
     }
 
- public func setOption(to value: String, forOption option: FDB.TransactionOption) throws {
+    public func setOption(to value: String, forOption option: FDB.TransactionOption) throws {
         let valueBytes = [UInt8](value.utf8)
         try setOption(to: valueBytes, forOption: option)
     }
 
- public func setOption(to value: Int, forOption option: FDB.TransactionOption) throws {
+    public func setOption(to value: Int, forOption option: FDB.TransactionOption) throws {
         let valueBytes = withUnsafeBytes(of: Int64(value)) { [UInt8]($0) }
         try setOption(to: valueBytes, forOption: option)
     }

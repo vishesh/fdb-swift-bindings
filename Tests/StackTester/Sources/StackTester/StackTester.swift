@@ -19,7 +19,7 @@
  */
 
 import Foundation
-import FoundationDB
+@testable import FoundationDB
 
 // Simple stack entry - equivalent to Go's stackEntry
 struct StackEntry {
@@ -32,7 +32,7 @@ class StackMachine {
     private var stack: [StackEntry] = []
     private var database: FDBDatabase
     private let verbose: Bool
-    private var transaction: (any TransactionProtocol)?
+    private var transaction: FDBTransaction?
     private var transactionMap: [String: any TransactionProtocol] = [:]
     private var transactionName: String = "MAIN"
     private var lastVersion: Int64 = 0
@@ -336,7 +336,7 @@ class StackMachine {
             let beginKey = waitAndPop().item as! [UInt8]
             let transaction = try currentTransaction()
 
-            let result = try await transaction.getRange(
+            let result = try await transaction.getRangeNative(
                 beginKey: beginKey,
                 endKey: endKey,
                 limit: limit,
@@ -357,7 +357,7 @@ class StackMachine {
             var endKey = prefix
             endKey.append(0xFF)
 
-            let result = try await transaction.getRange(
+            let result = try await transaction.getRangeNative(
                 beginKey: prefix,
                 endKey: endKey,
                 limit: limit,
@@ -384,7 +384,7 @@ class StackMachine {
             let endSelector = FDB.KeySelector(key: endKey, orEqual: endOrEqual, offset: endOffset)
             let transaction = try currentTransaction()
 
-            let result = try await transaction.getRange(
+            let result = try await transaction.getRangeNative(
                 beginSelector: beginSelector,
                 endSelector: endSelector,
                 limit: limit,
@@ -680,7 +680,7 @@ class StackMachine {
             let beginKey = prefixTuple.encode()
             let endKey = beginKey + [0xFF] // Simple range end
 
-            let result = try await transaction.getRange(
+            let result = try await transaction.getRangeNative(
                 beginKey: beginKey,
                 endKey: endKey,
                 limit: 0,
