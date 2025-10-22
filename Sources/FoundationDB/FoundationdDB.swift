@@ -106,7 +106,7 @@ protocol TransactionProtocol: Sendable {
     ///   - endSelector: The key selector for the end of the range.
     ///   - snapshot: Whether to perform a snapshot read.
     /// - Returns: An async sequence that yields key-value pairs.
-    func readRange(
+    func getRange(
         beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool
     ) -> FDB.AsyncKVSequence
 
@@ -319,7 +319,7 @@ extension TransactionProtocol {
         try await getKey(selector: selector, snapshot: snapshot)
     }
 
-    public func readRange(
+    public func getRange(
       beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         FDB.AsyncKVSequence(
@@ -330,30 +330,30 @@ extension TransactionProtocol {
         )
     }
 
-    public func readRange(
+    public func getRange(
       beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector
     ) -> FDB.AsyncKVSequence {
-        readRange(
+        getRange(
           beginSelector: beginSelector, endSelector: endSelector, snapshot: false
         )
     }
 
-    public func readRange(
+    public func getRange(
       begin: FDB.Selectable, end: FDB.Selectable, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = begin.toKeySelector()
         let endSelector = end.toKeySelector()
-        return readRange(
+        return getRange(
           beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
 
-    public func readRange(
+    public func getRange(
       beginKey: FDB.Key, endKey: FDB.Key, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
         let endSelector = FDB.KeySelector.firstGreaterOrEqual(endKey)
-        return readRange(
+        return getRange(
           beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
