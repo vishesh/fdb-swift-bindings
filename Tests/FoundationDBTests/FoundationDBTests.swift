@@ -68,12 +68,12 @@ extension TransactionProtocol {
         clearRange(beginKey: beginKeyBytes, endKey: endKeyBytes)
     }
 
-    func readRange(
+    func getRange(
         beginKey: String, endKey: String, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
         let endSelector = FDB.KeySelector.firstGreaterOrEqual(endKey)
-        return readRange(
+        return getRange(
             beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
@@ -1355,8 +1355,8 @@ func transactionOptionConvenienceMethods() throws {
     #expect(validationPassed, "Transaction option convenience methods have valid signatures")
 }
 
-@Test("readRange with KeySelectors - basic functionality")
-func readRangeWithKeySelectors() async throws {
+@Test("getRange with KeySelectors - basic functionality")
+func getRangeWithKeySelectors() async throws {
     try await FDBClient.maybeInitialize()
     let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
@@ -1374,12 +1374,12 @@ func readRangeWithKeySelectors() async throws {
     }
     _ = try await newTransaction.commit()
 
-    // Test readRange method with limited results to trigger pre-fetching
+    // Test getRange method with limited results to trigger pre-fetching
     let readTransaction = try database.createTransaction()
     let beginSelector = FDB.KeySelector.firstGreaterOrEqual("test_read_range_015")
     let endSelector = FDB.KeySelector.firstGreaterOrEqual("test_read_range_032")
 
-    let asyncSequence = readTransaction.readRange(
+    let asyncSequence = readTransaction.getRange(
         beginSelector: beginSelector, endSelector: endSelector
     )
 
@@ -1405,8 +1405,8 @@ func readRangeWithKeySelectors() async throws {
     #expect(count == 17, "Should read expected number of records in range")
 }
 
-@Test("readRange with AsyncIterator - comprehensive pre-fetching test")
-func readRangeAsyncIteratorPrefetch() async throws {
+@Test("getRange with AsyncIterator - comprehensive pre-fetching test")
+func getRangeAsyncIteratorPrefetch() async throws {
     try await FDBClient.maybeInitialize()
     let database = try FDBClient.openDatabase()
     let transaction = try database.createTransaction()
@@ -1429,7 +1429,7 @@ func readRangeAsyncIteratorPrefetch() async throws {
     let beginSelector = FDB.KeySelector.firstGreaterOrEqual("test_async_iter_020")
     let endSelector = FDB.KeySelector.firstGreaterOrEqual("test_async_iter_080")
 
-    let asyncSequence = readTransaction.readRange(
+    let asyncSequence = readTransaction.getRange(
         beginSelector: beginSelector, endSelector: endSelector
     )
 

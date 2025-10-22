@@ -33,7 +33,7 @@ extension FDB {
     /// ## Usage
     ///
     /// ```swift
-    /// let sequence = transaction.readRange(
+    /// let sequence = transaction.getRange(
     ///     beginSelector: .firstGreaterOrEqual("user:"),
     ///     endSelector: .firstGreaterOrEqual("user;")
     /// )
