@@ -112,6 +112,9 @@ protocol TransactionProtocol: Sendable {
 
     /// Retrieves key-value pairs within a range using key selectors.
     ///
+    /// This method directly calls FDB's C `fdb_transaction_get_range()` API.
+    /// Prefer using `getRange()` instead, which returns an `AsyncSequence` for better ergonomics.
+    ///
     /// - Parameters:
     ///   - beginSelector: The key selector for the start of the range.
     ///   - endSelector: The key selector for the end of the range.
@@ -124,6 +127,9 @@ protocol TransactionProtocol: Sendable {
     ) async throws -> ResultRange
 
     /// Retrieves key-value pairs within a range using byte array keys.
+    ///
+    /// This method directly calls FDB's C `fdb_transaction_get_range()` API.
+    /// Prefer using `getRange()` instead, which returns an `AsyncSequence` for better ergonomics.
     ///
     /// - Parameters:
     ///   - beginKey: The start key of the range as a byte array.
