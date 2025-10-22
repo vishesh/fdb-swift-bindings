@@ -556,7 +556,7 @@ func getRangeWithLimit() async throws {
     // Test with limit
     let readTransaction = try database.createTransaction()
     let result = try await readTransaction.getRangeNative(
-      beginKey: "test_limit_key_001", endKey: "test_limit_key_999", limit: 3, snapshot: false
+        beginKey: "test_limit_key_001", endKey: "test_limit_key_999", limit: 3, snapshot: false
     )
     #expect(result.records.count == 3, "Should return exactly 3 key-value pairs due to limit")
 
