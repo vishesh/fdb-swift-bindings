@@ -266,8 +266,8 @@ protocol TransactionProtocol: Sendable {
     ///   - value: Integer value for the option.
     ///   - option: The transaction option to set.
     /// - Throws: `FDBError` if the option cannot be set.
-    func setOption(to value: Int, forOption option: FDB.TransactionOption) throws}
-
+    func setOption(to value: Int, forOption option: FDB.TransactionOption) throws
+}
 
 /// Default implementation of transaction retry logic for `DatabaseProtocol`.
 extension DatabaseProtocol {
@@ -326,50 +326,50 @@ extension TransactionProtocol {
     }
 
     public func getRange(
-      beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool = false
+        beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         FDB.AsyncKVSequence(
-          transaction: self,
-          beginSelector: beginSelector,
-          endSelector: endSelector,
-          snapshot: snapshot
+            transaction: self,
+            beginSelector: beginSelector,
+            endSelector: endSelector,
+            snapshot: snapshot
         )
     }
 
     public func getRange(
-      beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector
+        beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector
     ) -> FDB.AsyncKVSequence {
         getRange(
-          beginSelector: beginSelector, endSelector: endSelector, snapshot: false
+            beginSelector: beginSelector, endSelector: endSelector, snapshot: false
         )
     }
 
     public func getRange(
-      begin: FDB.Selectable, end: FDB.Selectable, snapshot: Bool = false
+        begin: FDB.Selectable, end: FDB.Selectable, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = begin.toKeySelector()
         let endSelector = end.toKeySelector()
         return getRange(
-          beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
+            beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
 
     public func getRange(
-      beginKey: FDB.Key, endKey: FDB.Key, snapshot: Bool = false
+        beginKey: FDB.Key, endKey: FDB.Key, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
         let endSelector = FDB.KeySelector.firstGreaterOrEqual(endKey)
         return getRange(
-          beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
+            beginSelector: beginSelector, endSelector: endSelector, snapshot: snapshot
         )
     }
 
     func getRangeNative(
-      beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, limit: Int = 0,
-      snapshot: Bool = false
+        beginSelector: FDB.KeySelector, endSelector: FDB.KeySelector, limit: Int = 0,
+        snapshot: Bool = false
     ) async throws -> ResultRange {
         try await getRangeNative(
-          beginSelector: beginSelector, endSelector: endSelector, limit: limit, snapshot: snapshot
+            beginSelector: beginSelector, endSelector: endSelector, limit: limit, snapshot: snapshot
         )
     }
 
