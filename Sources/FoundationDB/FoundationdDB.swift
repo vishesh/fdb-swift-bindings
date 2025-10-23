@@ -60,26 +60,26 @@ protocol TransactionProtocol: Sendable {
     ///   - snapshot: Whether to perform a snapshot read.
     /// - Returns: The value associated with the key, or nil if not found.
     /// - Throws: `FDBError` if the operation fails.
-    func getValue(for key: FDB.Key, snapshot: Bool) async throws -> FDB.Value?
+    func getValue(for key: FDB.Bytes, snapshot: Bool) async throws -> FDB.Bytes?
 
     /// Sets a value for the given key.
     ///
     /// - Parameters:
     ///   - value: The value to set as a byte array.
     ///   - key: The key to associate with the value.
-    func setValue(_ value: FDB.Value, for key: FDB.Key)
+    func setValue(_ value: FDB.Bytes, for key: FDB.Bytes)
 
     /// Removes a key-value pair from the database.
     ///
     /// - Parameter key: The key to remove as a byte array.
-    func clear(key: FDB.Key)
+    func clear(key: FDB.Bytes)
 
     /// Removes all key-value pairs in the given range.
     ///
     /// - Parameters:
     ///   - beginKey: The start of the range (inclusive) as a byte array.
     ///   - endKey: The end of the range (exclusive) as a byte array.
-    func clearRange(beginKey: FDB.Key, endKey: FDB.Key)
+    func clearRange(beginKey: FDB.Bytes, endKey: FDB.Bytes)
 
     /// Resolves a key selector to an actual key.
     ///
@@ -88,7 +88,7 @@ protocol TransactionProtocol: Sendable {
     ///   - snapshot: Whether to perform a snapshot read.
     /// - Returns: The resolved key, or nil if no key matches.
     /// - Throws: `FDBError` if the operation fails.
-    func getKey(selector: FDB.Selectable, snapshot: Bool) async throws -> FDB.Key?
+    func getKey(selector: FDB.Selectable, snapshot: Bool) async throws -> FDB.Bytes?
 
     /// Resolves a key selector to an actual key.
     ///
@@ -97,7 +97,7 @@ protocol TransactionProtocol: Sendable {
     ///   - snapshot: Whether to perform a snapshot read.
     /// - Returns: The resolved key, or nil if no key matches.
     /// - Throws: `FDBError` if the operation fails.
-    func getKey(selector: FDB.KeySelector, snapshot: Bool) async throws -> FDB.Key?
+    func getKey(selector: FDB.KeySelector, snapshot: Bool) async throws -> FDB.Bytes?
 
     /// Returns an AsyncSequence that yields key-value pairs within a range.
     ///
@@ -139,7 +139,7 @@ protocol TransactionProtocol: Sendable {
     /// - Returns: A `ResultRange` containing the key-value pairs and more flag.
     /// - Throws: `FDBError` if the operation fails.
     func getRangeNative(
-        beginKey: FDB.Key, endKey: FDB.Key, limit: Int, snapshot: Bool
+        beginKey: FDB.Bytes, endKey: FDB.Bytes, limit: Int, snapshot: Bool
     ) async throws -> ResultRange
 
     /// Commits the transaction.
@@ -159,7 +159,7 @@ protocol TransactionProtocol: Sendable {
     ///
     /// - Returns: The transaction's versionstamp as a key, or nil if not available.
     /// - Throws: `FDBError` if the operation fails.
-    func getVersionstamp() async throws -> FDB.Key?
+    func getVersionstamp() async throws -> FDB.Bytes?
 
     /// Sets the read version for snapshot reads.
     ///
@@ -191,7 +191,7 @@ protocol TransactionProtocol: Sendable {
     ///   - endKey: The end of the range (exclusive).
     /// - Returns: The estimated size in bytes.
     /// - Throws: `FDBError` if the operation fails.
-    func getEstimatedRangeSizeBytes(beginKey: FDB.Key, endKey: FDB.Key) async throws -> Int
+    func getEstimatedRangeSizeBytes(beginKey: FDB.Bytes, endKey: FDB.Bytes) async throws -> Int
 
     /// Returns a list of keys that can split the given range into roughly equal chunks.
     ///
@@ -203,7 +203,7 @@ protocol TransactionProtocol: Sendable {
     ///   - chunkSize: The desired size of each chunk in bytes.
     /// - Returns: An array of keys representing split points.
     /// - Throws: `FDBError` if the operation fails.
-    func getRangeSplitPoints(beginKey: FDB.Key, endKey: FDB.Key, chunkSize: Int) async throws -> [[UInt8]]
+    func getRangeSplitPoints(beginKey: FDB.Bytes, endKey: FDB.Bytes, chunkSize: Int) async throws -> [[UInt8]]
 
     /// Returns the version number at which a committed transaction modified the database.
     ///
@@ -228,7 +228,7 @@ protocol TransactionProtocol: Sendable {
     ///   - key: The key to operate on.
     ///   - param: The parameter for the atomic operation.
     ///   - mutationType: The type of atomic operation to perform.
-    func atomicOp(key: FDB.Key, param: FDB.Value, mutationType: FDB.MutationType)
+    func atomicOp(key: FDB.Bytes, param: FDB.Bytes, mutationType: FDB.MutationType)
 
     /// Adds a conflict range to the transaction.
     ///
@@ -240,7 +240,7 @@ protocol TransactionProtocol: Sendable {
     ///   - endKey: The end of the range (exclusive) as a byte array.
     ///   - type: The type of conflict range (read or write).
     /// - Throws: `FDBError` if the operation fails.
-    func addConflictRange(beginKey: FDB.Key, endKey: FDB.Key, type: FDB.ConflictRangeType) throws
+    func addConflictRange(beginKey: FDB.Bytes, endKey: FDB.Bytes, type: FDB.ConflictRangeType) throws
 
     // MARK: - Transaction option methods
 
@@ -250,7 +250,7 @@ protocol TransactionProtocol: Sendable {
     ///   - value: Optional byte array value for the option.
     ///   - option: The transaction option to set.
     /// - Throws: `FDBError` if the option cannot be set.
-    func setOption(to value: FDB.Value?, forOption option: FDB.TransactionOption) throws
+    func setOption(to value: FDB.Bytes?, forOption option: FDB.TransactionOption) throws
 
     /// Sets a transaction option with a string value.
     ///
@@ -313,15 +313,15 @@ extension DatabaseProtocol {
 }
 
 extension TransactionProtocol {
-    public func getValue(for key: FDB.Key, snapshot: Bool = false) async throws -> FDB.Value? {
+    public func getValue(for key: FDB.Bytes, snapshot: Bool = false) async throws -> FDB.Bytes? {
         try await getValue(for: key, snapshot: snapshot)
     }
 
-    public func getKey(selector: FDB.Selectable, snapshot: Bool = false) async throws -> FDB.Key? {
+    public func getKey(selector: FDB.Selectable, snapshot: Bool = false) async throws -> FDB.Bytes? {
         try await getKey(selector: selector.toKeySelector(), snapshot: snapshot)
     }
 
-    public func getKey(selector: FDB.KeySelector, snapshot: Bool = false) async throws -> FDB.Key? {
+    public func getKey(selector: FDB.KeySelector, snapshot: Bool = false) async throws -> FDB.Bytes? {
         try await getKey(selector: selector, snapshot: snapshot)
     }
 
@@ -354,8 +354,9 @@ extension TransactionProtocol {
         )
     }
 
+
     public func getRange(
-        beginKey: FDB.Key, endKey: FDB.Key, snapshot: Bool = false
+        beginKey: FDB.Bytes, endKey: FDB.Bytes, snapshot: Bool = false
     ) -> FDB.AsyncKVSequence {
         let beginSelector = FDB.KeySelector.firstGreaterOrEqual(beginKey)
         let endSelector = FDB.KeySelector.firstGreaterOrEqual(endKey)
